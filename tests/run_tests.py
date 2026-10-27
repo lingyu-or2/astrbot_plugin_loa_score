@@ -479,14 +479,16 @@ check('image_urls 传本地路径', p.calls and p.calls[0]['image_urls'] == ['/t
       str(p.calls[:1]))
 
 item, err = _run_extract(_FakeProvider('{"error": "no_image_visible"}'))
-check('no_image_visible → 换模型指引', item is None and '不支持图片输入' in err
-      and '当前模型：test_prov / test-vl-1' in err, err)
+check('no_image_visible → 日志排查指引', item is None and '图片可能没有到达模型' in err
+      and '当前会话模型：test_prov / test-vl-1' in err
+      and '检测到图片请求失败' in err, err)
 
 item, err = _run_extract(_FakeProvider('{"error": "not_equipment"}'))
-check('not_equipment → 换模型指引', item is None and '多模态' in err, err)
+check('not_equipment → 多模态指引', item is None and '多模态' in err, err)
 
 item, err = _run_extract(_FakeProvider('这张图片我看不清楚哦，请重新发送~'))
-check('闲聊回复 → 无法解析指引', item is None and '无法解析' in err and '当前模型' in err, err)
+check('闲聊回复 → 无法解析指引', item is None and '无法解析' in err
+      and '当前会话模型' in err, err)
 
 item, err = _run_extract(_FakeProvider(''))
 check('空回复 → 指引', item is None and '不支持图片' in err, err)

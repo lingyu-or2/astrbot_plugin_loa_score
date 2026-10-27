@@ -235,15 +235,18 @@ def _provider_desc(provider) -> str:
 
 
 def _vision_error_msg(kind: str, desc: str) -> str:
-    base = f'模型未识别到装备属性界面（{kind}）。'
+    lines = [f'模型回复「{kind}」，图片可能没有到达模型。']
     if desc:
-        base = f'{base}\n当前模型：{desc}'
-    return (base + '\n'
-            '最常见原因：当前会话配置的对话模型**不支持图片输入**（纯文本模型看不到截图，'
-            '只能按提示词规则回答"没有装备界面"）。\n'
-            '解决办法：在 WebUI「提供商配置」给会话换成多模态模型'
-            '（如 glm-4v / qwen-vl / qwen2.5-vl / gpt-4o / gemini）后重试。\n'
-            '若模型确为多模态，请重发更清晰的截图（QQ 发图建议勾选"原图"）。')
+        lines.append(f'当前会话模型：{desc}')
+    lines.append(
+        '排查步骤：\n'
+        '1. 查 AstrBot 日志：出现「检测到图片请求失败」= 接口拒收了图片，'
+        'AstrBot 已自动去掉图片纯文本重试（该接口/网关实际不支持图片输入）；\n'
+        '2. 出现「图片预处理结果为空」= 图片转换失败被忽略；\n'
+        '3. 快速验证：在 WebUI 聊天页直接发同一张图让模型描述，同样看不见 = 接口问题，\n'
+        '   请在「提供商配置」换用多模态模型（glm-4v / qwen-vl / gpt-4o / gemini）后重试。'
+    )
+    return '\n'.join(lines)
 
 
 async def extract_item(context, event, image_path: str):
@@ -287,7 +290,7 @@ async def extract_item(context, event, image_path: str):
         logger.warning(f'[loa_score] 模型输出无法解析为 JSON: {text[:300]}')
         desc = _provider_desc(provider)
         return None, ('模型输出无法解析（可能不支持图片输入，把提示词当成了普通聊天）。\n'
-                      + (f'当前模型：{desc}\n' if desc else '')
+                      + (f'当前会话模型：{desc}\n' if desc else '')
                       + '请在 WebUI 换成多模态模型（glm-4v / qwen-vl / gpt-4o / gemini 等）后重试。')
     if data.get('error') in ('no_image_visible', 'not_equipment'):
         kind = '未收到图片' if data.get('error') == 'no_image_visible' else '未识别到装备界面'
