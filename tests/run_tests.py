@@ -481,6 +481,7 @@ check('image_urls 传本地路径', p.calls and p.calls[0]['image_urls'] == ['/t
 item, err = _run_extract(_FakeProvider('{"error": "no_image_visible"}'))
 check('no_image_visible → 日志排查指引', item is None and '图片可能没有到达模型' in err
       and '当前会话模型：test_prov / test-vl-1' in err
+      and '适配器:_FakeProvider' in err
       and '检测到图片请求失败' in err, err)
 
 item, err = _run_extract(_FakeProvider('{"error": "not_equipment"}'))

@@ -7,6 +7,7 @@
 import asyncio
 import json
 import re
+from pathlib import Path
 
 from astrbot.api import logger
 
@@ -218,7 +219,7 @@ def normalize_item(data: dict) -> dict:
 
 
 def _provider_desc(provider) -> str:
-    """尽力取出提供商/模型描述（仅用于错误提示，失败返回空串）。"""
+    """尽力取出提供商/模型/适配器描述（仅用于错误提示与日志，失败返回空串）。"""
     parts = []
     try:
         meta = provider.meta()
@@ -231,6 +232,7 @@ def _provider_desc(provider) -> str:
             parts.append(str(name))
     except Exception:
         pass
+    parts.append(f'适配器:{type(provider).__name__}')
     return ' / '.join(parts)
 
 
@@ -262,6 +264,12 @@ async def extract_item(context, event, image_path: str):
         return None, ('当前会话没有可用的对话模型。\n'
                       '请先在 AstrBot WebUI 配置一个支持图片输入的模型'
                       '（如 glm-4v / qwen-vl / gemini 等）再使用截图评分。')
+
+    try:
+        size_kb = Path(image_path).stat().st_size // 1024
+    except Exception:
+        size_kb = -1
+    logger.info(f'[loa_score] 发送识别请求: {_provider_desc(provider)}, 图片 {size_kb}KB')
 
     try:
         resp = await asyncio.wait_for(
