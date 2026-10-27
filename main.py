@@ -29,7 +29,7 @@ except ImportError:  # 兼容以目录为根的直接加载
     from core.vision import VISION_TIMEOUT, extract_item
 
 PLUGIN_NAME = 'astrbot_plugin_loa_score'
-PLUGIN_VERSION = '1.2.1'
+PLUGIN_VERSION = '1.2.2'
 
 SLOT_ARG = {'手镯': 'bracelet', '팔찌': 'bracelet', 'bracelet': 'bracelet',
             '项链': 'necklace', '목걸이': 'necklace', 'necklace': 'necklace',
@@ -38,26 +38,10 @@ SLOT_ARG = {'手镯': 'bracelet', '팔찌': 'bracelet', 'bracelet': 'bracelet',
 GRADE_ARG = {'遗物': 'relic', '유물': 'relic', 'relic': 'relic',
              '古代': 'ancient', '远古': 'ancient', '고대': 'ancient', 'ancient': 'ancient'}
 
-HELP_TEXT = """📿 命运方舟首饰评分（lopec 口径 · 仅 T4）
-
-用法：/首饰评分 + 装备截图（图片和指令同一条消息）
-可选参数：/首饰评分 [部位] [品级]（顺序不限）
-  部位：手镯 / 项链 / 耳环 / 戒指（截图看不出来时手动指定）
-  品级：遗物 / 古代（不填则按截图/共用规则展示）
-
-示例：
-  /首饰评分（附手镯截图）
-  /首饰评分 项链 古代（附截图）
-
-评分内容：
-  · 项链/耳环/戒指：主属性百分比 + 词条 下/中/上 评级 + 战力倍率
-  · 手镯：特殊词条 下/中/上 评级 + 特殊词条战力倍率（属性行另有 lopec 属性系数）
-
-说明：
-  · 识别需要支持图片输入的模型；可在插件配置指定「识别专用提供商」与「识别模型」
-  · 仅支持 T4（道具阶级 4）；T3 装备会直接提示不支持
-  · 一次只评分第一张图，多件请分条发送
-  · 词条与部位不符时会给出核对提醒，不改变评分"""
+HELP_TEXT = """📿 /首饰评分 + 截图（同一条消息）
+可选：/首饰评分 [部位] [品级]（如：项链 古代）
+部位：手镯/项链/耳环/戒指；品级：遗物/古代
+识别模型在插件配置选（如 qwen-vl-max）；仅 T4，多图只评第一张。"""
 
 
 @register(
@@ -121,7 +105,7 @@ class LoaScorePlugin(Star):
         try:
             self._reload_config()
             if not self.vision_enabled:
-                yield event.plain_result('⚠️ 截图评分功能已在插件配置中关闭（vision_enabled=false）。')
+                yield event.plain_result('⚠️ 截图评分已关闭（vision_enabled=false）。')
                 return
 
             images = [comp for comp in event.get_messages() if isinstance(comp, Image)]
@@ -140,9 +124,8 @@ class LoaScorePlugin(Star):
                 elif key in GRADE_ARG:
                     force_grade = GRADE_ARG[key]
 
-            notice = (f'（检测到 {len(images)} 张图片，本次仅评分第一张）'
-                      if len(images) > 1 else '')
-            yield event.plain_result('🔍 正在识别截图，请稍候…' + notice)
+            notice = '（仅第一张）' if len(images) > 1 else ''
+            yield event.plain_result('🔍 识别中…' + notice)
 
             image_data, err = await acquire_image_bytes(image_comp)
             if not image_data:
@@ -150,7 +133,7 @@ class LoaScorePlugin(Star):
                 return
             is_valid, err, ext = validate_image(image_data)
             if not is_valid:
-                yield event.plain_result(f'❌ 图片校验失败: {err}')
+                yield event.plain_result(f'❌ 图片校验失败：{err}')
                 return
             image_path = await self._save_temp_image(image_data, ext)
 
@@ -177,7 +160,7 @@ class LoaScorePlugin(Star):
             yield event.plain_result(grading.format_result(result))
         except Exception as e:
             logger.error(f'[loa_score] /首饰评分 异常: {e}', exc_info=True)
-            yield event.plain_result('❌ 评分过程出错，请稍后重试（详情见日志）。')
+            yield event.plain_result('❌ 评分出错，详见日志。')
 
     @filter.command('评分帮助')
     async def score_help(self, event: AstrMessageEvent):
@@ -186,4 +169,4 @@ class LoaScorePlugin(Star):
             yield event.plain_result(HELP_TEXT)
         except Exception as e:
             logger.error(f'[loa_score] /评分帮助 异常: {e}', exc_info=True)
-            yield event.plain_result('❌ 帮助生成失败，请稍后重试。')
+            yield event.plain_result('❌ 帮助生成失败。')

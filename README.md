@@ -1,11 +1,12 @@
 # astrbot_plugin_loa_score — 命运方舟首饰评分
 
 [![AstrBot 插件](https://img.shields.io/badge/AstrBot-插件-purple)](https://docs.astrbot.app/)
-![Version](https://img.shields.io/badge/version-1.2.1-blue)
+![Version](https://img.shields.io/badge/version-1.2.2-blue)
 
 发送《命运方舟》装备（项链/耳环/戒指/手镯）属性截图，机器人识别装备名与词条后按
 **lopec.kr 的评分口径**回复评分。评分规则表离线内置（由 lopec 前端逆向数据构建），
 识别由**多模态模型**完成；提供商与具体模型都可在插件配置里单独指定。
+评分结果输出为 3–4 行紧凑格式。
 
 ## 指令
 
@@ -93,6 +94,8 @@ astrbot_plugin_loa_score/
 
 ## 更新记录
 
+- **1.2.2（2026-10-27）**：评分结果压缩为 3–4 行紧凑格式（部位/品级/主属性/品质一行，词条一行，合计一行）；
+  报错与帮助同步缩短。
 - **1.2.1（2026-10-27）**：新增 `vision_model`，可在同一提供商下强制指定视觉模型
   （解决提供商默认 `qwen-image-3.0` 文生图模型无法识别的问题）；提前拦截文生图模型；
   兼容 `ProviderMeta.model` 为字符串；不再按模型名猜测 DeepSeek 是否支持视觉，

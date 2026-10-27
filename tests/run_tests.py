@@ -180,9 +180,9 @@ check('追加组合古代=하', opt_add['grade_ancient'] == '하', str(opt_add['
 
 txt = grading.format_result(res)
 check('输出含合计倍率', '×1.0764' in txt and '+7.64%' in txt, txt[:200])
-check('输出含遗物「上」', '遗物「上」' in txt, txt[:300])
-check('输出含古代「下」', '古代「下」' in txt, txt[:300])
-check('输出含属性行说明', '敏捷+14016' in txt and '不参与词条评级' in txt, txt[:300])
+check('输出含遗物上', '遗物上' in txt, txt[:300])
+check('输出含古代下', '古代下' in txt, txt[:300])
+check('输出含属性行', '敏捷+14016' in txt, txt[:300])
 
 # 覆盖切分：多出来的子句要报残留
 res2 = grading.grade_bracelet({
@@ -221,8 +221,8 @@ check('项链合计倍率', abs(res3['total_mult'] - expect_mult) < 1e-9,
       f'{res3["total_mult"]} vs {expect_mult}')
 txt3 = grading.format_result(res3)
 check('项链输出含 79.02%', '79.02%' in txt3, txt3[:300])
-check('项链输出含区间', '15178~17857' in txt3, txt3[:300])
-check('额外伤害显示 T4「中」', 'T4「中」（0.7 / 1.6 / 2.6）' in txt3, txt3[:400])
+check('项链输出含主属性百分比', '主属性79.02%' in txt3, txt3[:300])
+check('额外伤害显示 中', '额外伤害1.6%中' in txt3, txt3[:400])
 
 # T4 词条阶梯不分品级（实测：遗物装备也滚动古代档数值），强制遗物品级不改变评级
 res3b = grading.grade_accessory(dict(nasingeom, grade='relic'))
@@ -259,7 +259,7 @@ check('图1 小夜曲1.6→下', by1['小夜曲、信仰、和谐能量获得量
       str(by1.get('小夜曲、信仰、和谐能量获得量')))
 check('图1 品质透传', r_img1['quality'] == 94)
 txt1 = grading.format_result(r_img1)
-check('图1 输出含品质口径说明', '品质 94' in txt1 or '品质：94' in txt1, txt1[:300])
+check('图1 输出含品质', '品质94' in txt1, txt1[:300])
 
 # 图2 决战将至戒指（古代戒指，品质98，辅助词条）
 ring_img = {
@@ -344,7 +344,7 @@ r_t3 = grading.grade_item({'item_type': 'necklace', 'tier': 3, 'grade': 'relic',
                            'options': [{'raw': '额外伤害 +1.60%'}]})
 check('T3 直接拒绝评分', 'T3' in (r_t3.get('error') or ''), str(r_t3))
 txt_t3 = grading.format_result(r_t3)
-check('T3 输出带说明', '仅覆盖' in txt_t3 and 'T4' in txt_t3, txt_t3)
+check('T3 输出带说明', '不支持' in txt_t3 and 'T4' in txt_t3, txt_t3)
 
 r_name = grading.grade_item({'name': '相迎终结项链', 'item_type': None, 'tier': 4,
                              'main_stat': {'name': '力量', 'value': 17348},
@@ -363,8 +363,8 @@ r_wrong = grading.grade_accessory({
     'item_type': 'earring', 'grade': 'ancient', 'main_stat': None, 'stats': [],
     'options': [{'raw': '额外伤害 +1.60%'}, {'raw': '最大生命值 +3250'}]})
 check('部位不符给出警告', len(r_wrong['warnings']) == 1
-      and '只出现在项链' in r_wrong['warnings'][0], str(r_wrong['warnings']))
-check('部位不符显示在输出', '词条与部位不符' in grading.format_result(r_wrong),
+      and '项链专属' in r_wrong['warnings'][0], str(r_wrong['warnings']))
+check('部位不符显示在输出', '部位不符' in grading.format_result(r_wrong),
       grading.format_result(r_wrong)[-260:])
 r_right = grading.grade_accessory({
     'item_type': 'necklace', 'grade': 'ancient', 'main_stat': None, 'stats': [],
@@ -374,7 +374,7 @@ check('正确部位无警告', not r_right['warnings'], str(r_right['warnings'])
 r_quality = grading.grade_accessory({'item_type': 'ring', 'grade': 'ancient',
                                      'quality': 94, 'main_stat': None, 'options': []})
 txt_quality = grading.format_result(r_quality)
-check('无主属性也显示品质', '游戏内品质：94' in txt_quality, txt_quality[:220])
+check('无主属性也显示品质', '品质94' in txt_quality, txt_quality[:220])
 
 r_stat = grading.grade_bracelet({
     'item_type': 'bracelet', 'grade': 'ancient',
@@ -382,9 +382,9 @@ r_stat = grading.grade_bracelet({
     'stats': [{'name': '会心', 'value': 84}, {'name': '专长', 'value': 91}],
     'options': [{'raw': '暴击率增加4.2%。'},
                 {'raw': '攻击触发暴击时，对敌人造成的伤害增加1.5%。'}]})
-check('手镯属性战力提示 +5.25%', '+5.25%' in r_stat['stat_power_note'],
-      r_stat['stat_power_note'])
-check('手镯属性提示显示', '属性战力' in grading.format_result(r_stat),
+check('手镯属性战力 5.25', r_stat.get('stat_power_pct') == 5.25,
+      str(r_stat.get('stat_power_pct')))
+check('手镯属性提示显示', '属性+5.25%' in grading.format_result(r_stat),
       grading.format_result(r_stat)[:260])
 check('手镯属性不计入特殊词条合计', abs(r_stat['total_mult'] - 1.04) < 1e-9,
       str(r_stat['total_mult']))
@@ -393,7 +393,7 @@ r_many = grading.grade_accessory({
     'item_type': 'ring', 'grade': 'ancient', 'main_stat': None,
     'options': [{'raw': f'未知词条{i}'} for i in range(8)]})
 txt_many = grading.format_result(r_many)
-check('残留超过 6 条给出省略提示', '另有 2 条未列出' in txt_many, txt_many[-320:])
+check('残留超过 3 条给出省略提示', '…等8条' in txt_many, txt_many[-320:])
 
 # ---------- 5. 部位/品级兜底与错误路径 ----------
 err_res = grading.grade_item({'item_type': None})
@@ -640,20 +640,20 @@ check('未指定识别模型时 model=None', p.calls and p.calls[0]['model'] is 
       str(p.calls[:1]))
 
 item, err = _run_extract(_FakeProvider('{"error": "no_image_visible"}'))
-check('no_image_visible → 日志排查指引', item is None and '图片没有到达模型' in err
-      and '当前识别模型：test_prov / test-vl-1' in err
+check('no_image_visible → 网关排查指引', item is None and '模型没收到图片' in err
+      and 'test_prov / test-vl-1' in err
       and '适配器:_FakeProvider' in err
-      and '检测到图片请求失败' in err, err)
+      and 'WebUI' in err, err)
 
 item, err = _run_extract(_FakeProvider('{"error": "not_equipment"}'))
-check('not_equipment → 多模态指引', item is None and '多模态' in err, err)
+check('not_equipment → 指引', item is None and 'WebUI' in err, err)
 
 item, err = _run_extract(_FakeProvider('这张图片我看不清楚哦，请重新发送~'))
 check('闲聊回复 → 无法解析指引', item is None and '无法解析' in err
-      and '当前识别模型' in err, err)
+      and 'test_prov' in err, err)
 
 item, err = _run_extract(_FakeProvider(''))
-check('空回复 → 指引', item is None and '不支持图片' in err, err)
+check('空回复 → 指引', item is None and '无回复' in err, err)
 
 
 class _NoneCtx:
@@ -663,7 +663,7 @@ class _NoneCtx:
 
 item, err = _asyncio.run(
     vision.extract_item(_NoneCtx(), _FakeEvent(), '/tmp/fake.png'))
-check('无提供商 → 明确指引', item is None and '没有可用的对话模型' in err, err)
+check('无提供商 → 明确指引', item is None and '没有可用模型' in err, err)
 
 # 指定识别专用提供商（vision_provider_id 路径）
 item, err = _asyncio.run(vision.extract_item(
@@ -702,7 +702,7 @@ check('DeepSeek 视觉模型不被名字拦截', item is None and p_ds.calls
 p404 = _404Provider()
 item, err = _run_extract(p404)
 check('model_not_supported → 换模型指引', item is None
-      and '不是聊天/看图模型' in err and 'qwen-vl-max' in err, err)
+      and '不支持看图/聊天' in err and 'qwen-vl-max' in err, err)
 
 
 class _FakeCtxByName:
@@ -755,7 +755,7 @@ if main_mod is not None:
         event = _FakeScoreEvent([_FakeImage(img_path)])
         replies = _asyncio_init.run(_collect(plugin.score_item(event)))
         check('端到端评分成功',
-              any('装备' in r and '评分' in r for r in replies), str(replies)[:300])
+              any('主属性' in r or '词条' in r for r in replies), str(replies)[:300])
         check('端到端透传识别模型',
               prov.calls and prov.calls[0]['model'] == 'qwen-vl-max', str(prov.calls[:1]))
         check('评分后临时截图已清理', not list(plugin.tmp_dir.iterdir()),
@@ -771,7 +771,7 @@ if main_mod is not None:
             replies = _asyncio_init.run(_collect(plugin.score_item(event)))
         finally:
             main_mod.extract_item = orig_extract
-        check('识别异常时给出通用错误', any('评分过程出错' in r for r in replies),
+        check('识别异常时给出通用错误', any('评分出错' in r for r in replies),
               str(replies)[:300])
         check('识别异常时临时截图也清理', not list(plugin.tmp_dir.iterdir()),
               str(list(plugin.tmp_dir.iterdir())))
@@ -796,7 +796,7 @@ check('normalize: 单对象 stats/options 兼容',
 item, err = _run_extract(_FakeProvider('{"error":"image_too_small"}'))
 check('未知错误码 → 原样提示', item is None and 'image_too_small' in err, err)
 item, err = _run_extract(_FakeProvider('{}'))
-check('空结果 → 明确提示', item is None and '空结果' in err, err)
+check('空结果 → 明确提示', item is None and '没识别到装备信息' in err, err)
 
 check('JSON 大写代码块',
       vision._extract_json('```JSON\n{"item_type":"ring"}\n```\n说明：{备注}')
