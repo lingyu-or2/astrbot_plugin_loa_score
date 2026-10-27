@@ -1,0 +1,8 @@
+{
+  "vision_enabled": {
+    "description": "启用截图识别",
+    "type": "bool",
+    "hint": "关闭后 /首饰评分 不再调用多模态模型识别截图。识别依赖当前会话配置的对话模型支持图片输入（如 glm-4v / qwen-vl / gemini 等）",
+    "default": true
+  }
+}

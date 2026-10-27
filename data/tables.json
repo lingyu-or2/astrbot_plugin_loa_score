@@ -1,0 +1,2783 @@
+{
+ "meta": {
+  "source": "lopec.kr 前端逆向（2026-10-25），构建脚本 generate_tables.py",
+  "scope": "仅 T4（遗物/古代）"
+ },
+ "stat_ranges": {
+  "necklace": {
+   "cn": [
+    "项链"
+   ],
+   "min": 15178,
+   "range": 2679,
+   "max": 17857
+  },
+  "earring": {
+   "cn": [
+    "耳环"
+   ],
+   "min": 11806,
+   "range": 2083,
+   "max": 13889
+  },
+  "ring": {
+   "cn": [
+    "戒指"
+   ],
+   "min": 10962,
+   "range": 1935,
+   "max": 12897
+  },
+  "bracelet": {
+   "cn": [
+    "手镯"
+   ],
+   "min": null,
+   "range": null,
+   "max": null
+  }
+ },
+ "accessory_options": {
+  "추가 피해": {
+   "cn": [
+    "额外伤害"
+   ],
+   "percent": true,
+   "relic": [
+    0.48,
+    1.09,
+    1.82
+   ],
+   "ancient": [
+    0.7,
+    1.6,
+    2.6
+   ]
+  },
+  "적에게 주는 피해": {
+   "cn": [
+    "对敌人造成的伤害",
+    "对敌伤害"
+   ],
+   "percent": true,
+   "relic": [
+    0.37,
+    0.84,
+    1.4
+   ],
+   "ancient": [
+    0.55,
+    1.2,
+    2.0
+   ]
+  },
+  "낙인력": {
+   "cn": [
+    "烙印力",
+    "标记力"
+   ],
+   "percent": true,
+   "relic": [
+    1.48,
+    3.36,
+    5.6
+   ],
+   "ancient": [
+    2.15,
+    4.8,
+    8.0
+   ]
+  },
+  "세레나데, 신앙, 조화 게이지 획득량": {
+   "cn": [
+    "小夜曲、信仰、和谐能量获得量",
+    "小夜曲、信仰、调和能量获得量",
+    "能量获得量"
+   ],
+   "percent": true,
+   "relic": [
+    1.48,
+    3.36,
+    5.6
+   ],
+   "ancient": [
+    1.6,
+    3.6,
+    6.0
+   ]
+  },
+  "무기 공격력": {
+   "cn": [
+    "武器攻击力"
+   ],
+   "percent": true,
+   "relic": [
+    0.56,
+    1.26,
+    2.1
+   ],
+   "ancient": [
+    0.8,
+    1.8,
+    3.0
+   ]
+  },
+  "공격력": {
+   "cn": [
+    "攻击力"
+   ],
+   "percent": true,
+   "relic": [
+    0.29,
+    0.66,
+    1.09
+   ],
+   "ancient": [
+    0.4,
+    0.95,
+    1.55
+   ]
+  },
+  "파티원 회복 효과": {
+   "cn": [
+    "队友恢复效果",
+    "队友回复效果",
+    "队友治疗效果"
+   ],
+   "percent": true,
+   "relic": [
+    0.65,
+    1.47,
+    2.45
+   ],
+   "ancient": [
+    0.95,
+    2.1,
+    3.5
+   ]
+  },
+  "파티원 보호막 효과": {
+   "cn": [
+    "队友护盾效果"
+   ],
+   "percent": true,
+   "relic": [
+    0.65,
+    1.47,
+    2.45
+   ],
+   "ancient": [
+    0.95,
+    2.1,
+    3.5
+   ]
+  },
+  "치명타 적중률": {
+   "cn": [
+    "暴击率",
+    "暴击命中率"
+   ],
+   "percent": true,
+   "relic": [
+    0.29,
+    0.66,
+    1.09
+   ],
+   "ancient": [
+    0.4,
+    0.95,
+    1.55
+   ]
+  },
+  "치명타 피해": {
+   "cn": [
+    "暴击伤害"
+   ],
+   "percent": true,
+   "relic": [
+    0.74,
+    1.7,
+    2.82
+   ],
+   "ancient": [
+    1.1,
+    2.4,
+    4.0
+   ]
+  },
+  "아군 공격력 강화 효과": {
+   "cn": [
+    "我军攻击力强化效果",
+    "我方攻击力强化效果",
+    "队友攻击力强化效果"
+   ],
+   "percent": true,
+   "relic": [
+    0.92,
+    2.12,
+    3.52
+   ],
+   "ancient": [
+    1.35,
+    3.0,
+    5.0
+   ]
+  },
+  "아군 피해량 강화 효과": {
+   "cn": [
+    "我军伤害量强化效果",
+    "我方伤害量强化效果",
+    "队友伤害量强化效果"
+   ],
+   "percent": true,
+   "relic": [
+    1.38,
+    3.18,
+    5.28
+   ],
+   "ancient": [
+    2.0,
+    4.5,
+    7.5
+   ]
+  },
+  "무기 공격력@flat": {
+   "cn": [
+    "武器攻击力"
+   ],
+   "percent": false,
+   "relic": [
+    57.0,
+    147.0,
+    285.0
+   ],
+   "ancient": [
+    195.0,
+    480.0,
+    960.0
+   ]
+  },
+  "공격력@flat": {
+   "cn": [
+    "攻击力"
+   ],
+   "percent": false,
+   "relic": [
+    24.0,
+    61.0,
+    118.0
+   ],
+   "ancient": [
+    80.0,
+    195.0,
+    390.0
+   ]
+  },
+  "최대 생명력": {
+   "cn": [
+    "最大生命值",
+    "最大生命力",
+    "生命上限"
+   ],
+   "percent": false,
+   "relic": [
+    992.0,
+    2253.0,
+    3755.0
+   ],
+   "ancient": [
+    1300.0,
+    3250.0,
+    6500.0
+   ]
+  },
+  "최대 마나": {
+   "cn": [
+    "最大法力值",
+    "最大法力",
+    "最大魔力"
+   ],
+   "percent": false,
+   "relic": [
+    6.0,
+    13.0,
+    21.0
+   ],
+   "ancient": [
+    6.0,
+    15.0,
+    30.0
+   ]
+  },
+  "상태이상 공격 지속시간": {
+   "cn": [
+    "异常状态持续时间",
+    "异常状态攻击持续时间"
+   ],
+   "percent": true,
+   "relic": [
+    0.19,
+    0.42,
+    0.7
+   ],
+   "ancient": [
+    0.2,
+    0.5,
+    1.0
+   ]
+  },
+  "전투 중 생명력 회복량": {
+   "cn": [
+    "战斗中的生命值恢复量",
+    "战斗中生命力回复量",
+    "战斗中生命回复量"
+   ],
+   "percent": false,
+   "relic": [
+    8.0,
+    17.0,
+    28.0
+   ],
+   "ancient": [
+    10.0,
+    25.0,
+    50.0
+   ]
+  }
+ },
+ "accessory_weights": {
+  "공격력": 0.01,
+  "공격력@flat": 7e-06,
+  "추가 피해": 0.007692,
+  "치명타 적중률": 0.007742,
+  "치명타 피해": 0.003,
+  "적에게 주는 피해": 0.01
+ },
+ "bracelet_templates": [
+  {
+   "key": "공격및이동속도가3%증가한다.",
+   "clauses": [
+    {
+     "type": "atk_move_speed",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격및이동속도가4%증가한다.",
+   "clauses": [
+    {
+     "type": "atk_move_speed",
+     "values": [
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격및이동속도가5%증가한다.",
+   "clauses": [
+    {
+     "type": "atk_move_speed",
+     "values": [
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격및이동속도가6%증가한다.",
+   "clauses": [
+    {
+     "type": "atk_move_speed",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "치명타적중률이2.6%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_rate",
+     "values": [
+      2.6
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "치명타적중률이3.4%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_rate",
+     "values": [
+      3.4
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "치명타적중률이4.2%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_rate",
+     "values": [
+      4.2
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 400
+  },
+  {
+   "key": "치명타적중률이5%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_rate",
+     "values": [
+      5.0
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 450
+  },
+  {
+   "key": "치명타피해가5.2%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_dmg",
+     "values": [
+      5.2
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "치명타피해가6.8%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_dmg",
+     "values": [
+      6.8
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "치명타피해가8.4%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_dmg",
+     "values": [
+      8.4
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 400
+  },
+  {
+   "key": "치명타피해가10%증가한다.공격이치명타로적중시적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "crit_dmg",
+     "values": [
+      10.0
+     ]
+    },
+    {
+     "type": "crit_final_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 450
+  },
+  {
+   "key": "적에게주는피해가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_dmg",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 150
+  },
+  {
+   "key": "적에게주는피해가2%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_dmg",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 200
+  },
+  {
+   "key": "적에게주는피해가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 250
+  },
+  {
+   "key": "적에게주는피해가3%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_dmg",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "적에게주는피해가1.5%증가하며,무력화상태의적에게주는피해가3.5%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_stagger",
+     "values": [
+      1.5,
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 220
+  },
+  {
+   "key": "적에게주는피해가2%증가하며,무력화상태의적에게주는피해가4%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_stagger",
+     "values": [
+      2.0,
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 280
+  },
+  {
+   "key": "적에게주는피해가2.5%증가하며,무력화상태의적에게주는피해가4.5%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_stagger",
+     "values": [
+      2.5,
+      4.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 340
+  },
+  {
+   "key": "적에게주는피해가3%증가하며,무력화상태의적에게주는피해가5%증가한다.",
+   "clauses": [
+    {
+     "type": "enemy_stagger",
+     "values": [
+      3.0,
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 400
+  },
+  {
+   "key": "스킬의재사용대기시간이2%증가하지만,적에게주는피해가4%증가한다.",
+   "clauses": [
+    {
+     "type": "cdr_exchange",
+     "values": [
+      2.0,
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "스킬의재사용대기시간이2%증가하지만,적에게주는피해가4.5%증가한다.",
+   "clauses": [
+    {
+     "type": "cdr_exchange",
+     "values": [
+      2.0,
+      4.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "스킬의재사용대기시간이2%증가하지만,적에게주는피해가5%증가한다.",
+   "clauses": [
+    {
+     "type": "cdr_exchange",
+     "values": [
+      2.0,
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 400
+  },
+  {
+   "key": "스킬의재사용대기시간이2%증가하지만,적에게주는피해가5.5%증가한다.",
+   "clauses": [
+    {
+     "type": "cdr_exchange",
+     "values": [
+      2.0,
+      5.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 450
+  },
+  {
+   "key": "추가피해가2%증가한다.악마및대악마계열피해량이2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "add_dmg",
+     "values": [
+      2.0
+     ]
+    },
+    {
+     "type": "devil_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "추가피해가2.5%증가한다.악마및대악마계열피해량이2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "add_dmg",
+     "values": [
+      2.5
+     ]
+    },
+    {
+     "type": "devil_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "추가피해가3%증가한다.악마및대악마계열피해량이2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "add_dmg",
+     "values": [
+      3.0
+     ]
+    },
+    {
+     "type": "devil_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 400
+  },
+  {
+   "key": "추가피해가3.5%증가한다.악마및대악마계열피해량이2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "add_dmg",
+     "values": [
+      3.5
+     ]
+    },
+    {
+     "type": "devil_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 450
+  },
+  {
+   "key": "공격적중시매초마다10초동안무기공격력이1000,공격및이동속도가1%증가한다.(최대6중첩)",
+   "clauses": [
+    {
+     "type": "watk_speed_buff",
+     "values": [
+      10.0,
+      1000.0,
+      1.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 162
+  },
+  {
+   "key": "공격적중시매초마다10초동안무기공격력이1160,공격및이동속도가1%증가한다.(최대6중첩)",
+   "clauses": [
+    {
+     "type": "watk_speed_buff",
+     "values": [
+      10.0,
+      1160.0,
+      1.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 188
+  },
+  {
+   "key": "공격적중시매초마다10초동안무기공격력이1320,공격및이동속도가1%증가한다.(최대6중첩)",
+   "clauses": [
+    {
+     "type": "watk_speed_buff",
+     "values": [
+      10.0,
+      1320.0,
+      1.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 214
+  },
+  {
+   "key": "공격적중시매초마다10초동안무기공격력이1480,공격및이동속도가1%증가한다.(최대6중첩)",
+   "clauses": [
+    {
+     "type": "watk_speed_buff",
+     "values": [
+      10.0,
+      1480.0,
+      1.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 240
+  },
+  {
+   "key": "무기공격력이6300증가한다.자신의생명력이50%이상일경우적에게공격적중시5초동안무기공격력이1800증가한다.",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      6300.0
+     ]
+    },
+    {
+     "type": "watk_hp_cond",
+     "values": [
+      50.0,
+      5.0,
+      1800.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 49
+  },
+  {
+   "key": "무기공격력이7200증가한다.자신의생명력이50%이상일경우적에게공격적중시5초동안무기공격력이2000증가한다.",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      7200.0
+     ]
+    },
+    {
+     "type": "watk_hp_cond",
+     "values": [
+      50.0,
+      5.0,
+      2000.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 54
+  },
+  {
+   "key": "무기공격력이8100증가한다.자신의생명력이50%이상일경우적에게공격적중시5초동안무기공격력이2200증가한다.",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      8100.0
+     ]
+    },
+    {
+     "type": "watk_hp_cond",
+     "values": [
+      50.0,
+      5.0,
+      2200.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 59
+  },
+  {
+   "key": "무기공격력이9000증가한다.자신의생명력이50%이상일경우적에게공격적중시5초동안무기공격력이2400증가한다.",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      9000.0
+     ]
+    },
+    {
+     "type": "watk_hp_cond",
+     "values": [
+      50.0,
+      5.0,
+      2400.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 65
+  },
+  {
+   "key": "무기공격력이6000증가한다.공격적중시30초마다120초동안무기공격력이120증가한다.(최대30중첩)",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      6000.0
+     ]
+    },
+    {
+     "type": "watk_interval",
+     "values": [
+      30.0,
+      120.0,
+      120.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      30.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 97
+  },
+  {
+   "key": "무기공격력이6900증가한다.공격적중시30초마다120초동안무기공격력이130증가한다.(최대30중첩)",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      6900.0
+     ]
+    },
+    {
+     "type": "watk_interval",
+     "values": [
+      30.0,
+      120.0,
+      130.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      30.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 105
+  },
+  {
+   "key": "무기공격력이7800증가한다.공격적중시30초마다120초동안무기공격력이140증가한다.(최대30중첩)",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      7800.0
+     ]
+    },
+    {
+     "type": "watk_interval",
+     "values": [
+      30.0,
+      120.0,
+      140.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      30.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 113
+  },
+  {
+   "key": "무기공격력이8700증가한다.공격적중시30초마다120초동안무기공격력이150증가한다.(최대30중첩)",
+   "clauses": [
+    {
+     "type": "watk_flat_sent",
+     "values": [
+      8700.0
+     ]
+    },
+    {
+     "type": "watk_interval",
+     "values": [
+      30.0,
+      120.0,
+      150.0
+     ]
+    },
+    {
+     "type": "max_stack",
+     "values": [
+      30.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 121
+  },
+  {
+   "key": "백어택스킬이적에게주는피해가2%증가한다.",
+   "clauses": [
+    {
+     "type": "back_atk_dmg",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 140
+  },
+  {
+   "key": "백어택스킬이적에게주는피해가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "back_atk_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 175
+  },
+  {
+   "key": "백어택스킬이적에게주는피해가3%증가한다.",
+   "clauses": [
+    {
+     "type": "back_atk_dmg",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 210
+  },
+  {
+   "key": "백어택스킬이적에게주는피해가3.5%증가한다.",
+   "clauses": [
+    {
+     "type": "back_atk_dmg",
+     "values": [
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 245
+  },
+  {
+   "key": "헤드어택스킬이적에게주는피해가2%증가한다.",
+   "clauses": [
+    {
+     "type": "head_atk_dmg",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 140
+  },
+  {
+   "key": "헤드어택스킬이적에게주는피해가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "head_atk_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 175
+  },
+  {
+   "key": "헤드어택스킬이적에게주는피해가3%증가한다.",
+   "clauses": [
+    {
+     "type": "head_atk_dmg",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 210
+  },
+  {
+   "key": "헤드어택스킬이적에게주는피해가3.5%증가한다.",
+   "clauses": [
+    {
+     "type": "head_atk_dmg",
+     "values": [
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 245
+  },
+  {
+   "key": "방향성공격이아닌스킬이적에게주는피해가2%증가한다.각성기는적용되지않는다.",
+   "clauses": [
+    {
+     "type": "nondir_dmg",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 200
+  },
+  {
+   "key": "방향성공격이아닌스킬이적에게주는피해가2.5%증가한다.각성기는적용되지않는다.",
+   "clauses": [
+    {
+     "type": "nondir_dmg",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 250
+  },
+  {
+   "key": "방향성공격이아닌스킬이적에게주는피해가3%증가한다.각성기는적용되지않는다.",
+   "clauses": [
+    {
+     "type": "nondir_dmg",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 300
+  },
+  {
+   "key": "방향성공격이아닌스킬이적에게주는피해가3.5%증가한다.각성기는적용되지않는다.",
+   "clauses": [
+    {
+     "type": "nondir_dmg",
+     "values": [
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "추가피해+2.50%",
+   "clauses": [
+    {
+     "type": "add_dmg_plus",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 192.3
+  },
+  {
+   "key": "추가피해+3.00%",
+   "clauses": [
+    {
+     "type": "add_dmg_plus",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 230.76
+  },
+  {
+   "key": "추가피해+3.50%",
+   "clauses": [
+    {
+     "type": "add_dmg_plus",
+     "values": [
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 269.22
+  },
+  {
+   "key": "추가피해+4.00%",
+   "clauses": [
+    {
+     "type": "add_dmg_plus",
+     "values": [
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 307.68
+  },
+  {
+   "key": "아군공격력강화효과+3.00%",
+   "clauses": [
+    {
+     "type": "ally_atk_plus",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군공격력강화효과+4.00%",
+   "clauses": [
+    {
+     "type": "ally_atk_plus",
+     "values": [
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군공격력강화효과+5.00%",
+   "clauses": [
+    {
+     "type": "ally_atk_plus",
+     "values": [
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군공격력강화효과+6.00%",
+   "clauses": [
+    {
+     "type": "ally_atk_plus",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군피해량강화효과+4.50%",
+   "clauses": [
+    {
+     "type": "ally_dmg_plus",
+     "values": [
+      4.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군피해량강화효과+6.00%",
+   "clauses": [
+    {
+     "type": "ally_dmg_plus",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군피해량강화효과+7.50%",
+   "clauses": [
+    {
+     "type": "ally_dmg_plus",
+     "values": [
+      7.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "아군피해량강화효과+9.00%",
+   "clauses": [
+    {
+     "type": "ally_dmg_plus",
+     "values": [
+      9.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "치명타적중률+2.60%",
+   "clauses": [
+    {
+     "type": "crit_rate_plus",
+     "values": [
+      2.6
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 182
+  },
+  {
+   "key": "치명타적중률+3.40%",
+   "clauses": [
+    {
+     "type": "crit_rate_plus",
+     "values": [
+      3.4
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 238
+  },
+  {
+   "key": "치명타적중률+4.20%",
+   "clauses": [
+    {
+     "type": "crit_rate_plus",
+     "values": [
+      4.2
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 294
+  },
+  {
+   "key": "치명타적중률+5.00%",
+   "clauses": [
+    {
+     "type": "crit_rate_plus",
+     "values": [
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 350
+  },
+  {
+   "key": "치명타피해+5.20%",
+   "clauses": [
+    {
+     "type": "crit_dmg_plus",
+     "values": [
+      5.2
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 173.316
+  },
+  {
+   "key": "치명타피해+6.80%",
+   "clauses": [
+    {
+     "type": "crit_dmg_plus",
+     "values": [
+      6.8
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 226.644
+  },
+  {
+   "key": "치명타피해+8.40%",
+   "clauses": [
+    {
+     "type": "crit_dmg_plus",
+     "values": [
+      8.4
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 279.972
+  },
+  {
+   "key": "치명타피해+10.00%",
+   "clauses": [
+    {
+     "type": "crit_dmg_plus",
+     "values": [
+      10.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 333.3
+  },
+  {
+   "key": "무기공격력+6300",
+   "clauses": [
+    {
+     "type": "watk_flat",
+     "values": [
+      6300.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "무기공격력+7200",
+   "clauses": [
+    {
+     "type": "watk_flat",
+     "values": [
+      7200.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "무기공격력+8100",
+   "clauses": [
+    {
+     "type": "watk_flat",
+     "values": [
+      8100.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "무기공격력+9000",
+   "clauses": [
+    {
+     "type": "watk_flat",
+     "values": [
+      9000.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의방어력을1.5%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "def_debuff",
+     "values": [
+      8.0,
+      1.5
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 105
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의방어력을1.8%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2%증가한다.",
+   "clauses": [
+    {
+     "type": "def_debuff",
+     "values": [
+      8.0,
+      1.8
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 126
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의방어력을2.1%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "def_debuff",
+     "values": [
+      8.0,
+      2.1
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 147
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의방어력을2.5%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가3%증가한다.",
+   "clauses": [
+    {
+     "type": "def_debuff",
+     "values": [
+      8.0,
+      2.5
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 175
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타저항을1.5%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "critres_debuff",
+     "values": [
+      8.0,
+      1.5
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 105
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타저항을1.8%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2%증가한다.",
+   "clauses": [
+    {
+     "type": "critres_debuff",
+     "values": [
+      8.0,
+      1.8
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 126
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타저항을2.1%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "critres_debuff",
+     "values": [
+      8.0,
+      2.1
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 147
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타저항을2.5%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가3%증가한다.",
+   "clauses": [
+    {
+     "type": "critres_debuff",
+     "values": [
+      8.0,
+      2.5
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 175
+  },
+  {
+   "key": "파티효과로보호효과(보호막,생명력회복,받는피해감소)가적용된대상이5초동안적에게주는피해가0.7%증가한다.해당효과는한파티당하나만적용되며,지속시간이없는보호효과에는적용되지않는다.아군공격력강화효과가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "protect_buff_dmg",
+     "values": [
+      5.0,
+      0.7
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티효과로보호효과(보호막,생명력회복,받는피해감소)가적용된대상이5초동안적에게주는피해가0.9%증가한다.해당효과는한파티당하나만적용되며,지속시간이없는보호효과에는적용되지않는다.아군공격력강화효과가2%증가한다.",
+   "clauses": [
+    {
+     "type": "protect_buff_dmg",
+     "values": [
+      5.0,
+      0.9
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티효과로보호효과(보호막,생명력회복,받는피해감소)가적용된대상이5초동안적에게주는피해가1.1%증가한다.해당효과는한파티당하나만적용되며,지속시간이없는보호효과에는적용되지않는다.아군공격력강화효과가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "protect_buff_dmg",
+     "values": [
+      5.0,
+      1.1
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티효과로보호효과(보호막,생명력회복,받는피해감소)가적용된대상이5초동안적에게주는피해가1.3%증가한다.해당효과는한파티당하나만적용되며,지속시간이없는보호효과에는적용되지않는다.아군공격력강화효과가3%증가한다.",
+   "clauses": [
+    {
+     "type": "protect_buff_dmg",
+     "values": [
+      5.0,
+      1.3
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타피해저항을3%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가1.5%증가한다.",
+   "clauses": [
+    {
+     "type": "critdmgres_debuff",
+     "values": [
+      8.0,
+      3.0
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      1.5
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 100
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타피해저항을3.6%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2%증가한다.",
+   "clauses": [
+    {
+     "type": "critdmgres_debuff",
+     "values": [
+      8.0,
+      3.6
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 120
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타피해저항을4.2%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "critdmgres_debuff",
+     "values": [
+      8.0,
+      4.2
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 140
+  },
+  {
+   "key": "몬스터에게공격적중시8초동안대상의치명타피해저항을4.8%감소시킨다.해당효과는한파티당하나만적용된다.아군공격력강화효과가3%증가한다.",
+   "clauses": [
+    {
+     "type": "critdmgres_debuff",
+     "values": [
+      8.0,
+      4.8
+     ]
+    },
+    {
+     "type": "ally_atk",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 160
+  },
+  {
+   "key": "시드등급이하몬스터에게주는피해량이3%증가한다.",
+   "clauses": [
+    {
+     "type": "seed_dmg",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게주는피해량이4%증가한다.",
+   "clauses": [
+    {
+     "type": "seed_dmg",
+     "values": [
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게주는피해량이5%증가한다.",
+   "clauses": [
+    {
+     "type": "seed_dmg",
+     "values": [
+      5.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게주는피해량이6%증가한다.",
+   "clauses": [
+    {
+     "type": "seed_dmg",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게받는피해량이4%감소한다.",
+   "clauses": [
+    {
+     "type": "seed_def",
+     "values": [
+      4.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게받는피해량이6%감소한다.",
+   "clauses": [
+    {
+     "type": "seed_def",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게받는피해량이8%감소한다.",
+   "clauses": [
+    {
+     "type": "seed_def",
+     "values": [
+      8.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "시드등급이하몬스터에게받는피해량이10%감소한다.",
+   "clauses": [
+    {
+     "type": "seed_def",
+     "values": [
+      10.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "물리방어력+4000",
+   "clauses": [
+    {
+     "type": "phys_def",
+     "values": [
+      4000.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "물리방어력+5000",
+   "clauses": [
+    {
+     "type": "phys_def",
+     "values": [
+      5000.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "물리방어력+6000",
+   "clauses": [
+    {
+     "type": "phys_def",
+     "values": [
+      6000.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "물리방어력+7000",
+   "clauses": [
+    {
+     "type": "phys_def",
+     "values": [
+      7000.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "마법방어력+4000",
+   "clauses": [
+    {
+     "type": "magic_def",
+     "values": [
+      4000.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "마법방어력+5000",
+   "clauses": [
+    {
+     "type": "magic_def",
+     "values": [
+      5000.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "마법방어력+6000",
+   "clauses": [
+    {
+     "type": "magic_def",
+     "values": [
+      6000.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "마법방어력+7000",
+   "clauses": [
+    {
+     "type": "magic_def",
+     "values": [
+      7000.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "최대생명력+8400",
+   "clauses": [
+    {
+     "type": "hp_flat",
+     "values": [
+      8400.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "최대생명력+11200",
+   "clauses": [
+    {
+     "type": "hp_flat",
+     "values": [
+      11200.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "최대생명력+14000",
+   "clauses": [
+    {
+     "type": "hp_flat",
+     "values": [
+      14000.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "최대생명력+16800",
+   "clauses": [
+    {
+     "type": "hp_flat",
+     "values": [
+      16800.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투중생명력회복량+80",
+   "clauses": [
+    {
+     "type": "hp_regen",
+     "values": [
+      80.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투중생명력회복량+100",
+   "clauses": [
+    {
+     "type": "hp_regen",
+     "values": [
+      100.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투중생명력회복량+130",
+   "clauses": [
+    {
+     "type": "hp_regen",
+     "values": [
+      130.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투중생명력회복량+160",
+   "clauses": [
+    {
+     "type": "hp_regen",
+     "values": [
+      160.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투자원자연회복량+6.00%",
+   "clauses": [
+    {
+     "type": "resource_regen",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투자원자연회복량+8.00%",
+   "clauses": [
+    {
+     "type": "resource_regen",
+     "values": [
+      8.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투자원자연회복량+10.00%",
+   "clauses": [
+    {
+     "type": "resource_regen",
+     "values": [
+      10.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "전투자원자연회복량+12.00%",
+   "clauses": [
+    {
+     "type": "resource_regen",
+     "values": [
+      12.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "이동기및기상기재사용대기시간이6%감소한다.",
+   "clauses": [
+    {
+     "type": "dash_cdr",
+     "values": [
+      6.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "이동기및기상기재사용대기시간이8%감소한다.",
+   "clauses": [
+    {
+     "type": "dash_cdr",
+     "values": [
+      8.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "이동기및기상기재사용대기시간이10%감소한다.",
+   "clauses": [
+    {
+     "type": "dash_cdr",
+     "values": [
+      10.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "이동기및기상기재사용대기시간이12%감소한다.",
+   "clauses": [
+    {
+     "type": "dash_cdr",
+     "values": [
+      12.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격적중시90초동안경직및피격이상에면역이된다.(재사용대기시간90초)해당효과는1회피격시사라진다.",
+   "clauses": [
+    {
+     "type": "superarmor",
+     "values": [
+      90.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격적중시80초동안경직및피격이상에면역이된다.(재사용대기시간80초)해당효과는1회피격시사라진다.",
+   "clauses": [
+    {
+     "type": "superarmor",
+     "values": [
+      80.0
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격적중시70초동안경직및피격이상에면역이된다.(재사용대기시간70초)해당효과는1회피격시사라진다.",
+   "clauses": [
+    {
+     "type": "superarmor",
+     "values": [
+      70.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "공격적중시60초동안경직및피격이상에면역이된다.(재사용대기시간60초)해당효과는1회피격시사라진다.",
+   "clauses": [
+    {
+     "type": "superarmor",
+     "values": [
+      60.0
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티원보호및회복효과가2%증가한다.",
+   "clauses": [
+    {
+     "type": "party_protect_heal",
+     "values": [
+      2.0
+     ]
+    }
+   ],
+   "grade_relic": "하",
+   "grade_ancient": null,
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티원보호및회복효과가2.5%증가한다.",
+   "clauses": [
+    {
+     "type": "party_protect_heal",
+     "values": [
+      2.5
+     ]
+    }
+   ],
+   "grade_relic": "중",
+   "grade_ancient": "하",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티원보호및회복효과가3%증가한다.",
+   "clauses": [
+    {
+     "type": "party_protect_heal",
+     "values": [
+      3.0
+     ]
+    }
+   ],
+   "grade_relic": "상",
+   "grade_ancient": "중",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  },
+  {
+   "key": "파티원보호및회복효과가3.5%증가한다.",
+   "clauses": [
+    {
+     "type": "party_protect_heal",
+     "values": [
+      3.5
+     ]
+    }
+   ],
+   "grade_relic": null,
+   "grade_ancient": "상",
+   "dealer": true,
+   "support": true,
+   "atk_mult": 0
+  }
+ ],
+ "bracelet_stat_weight": 0.0003
+}

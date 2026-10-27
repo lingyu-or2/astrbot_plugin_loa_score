@@ -1,0 +1,8 @@
+name: astrbot_plugin_loa_score
+display_name: 命运方舟首饰评分
+short_desc: 发送装备/手镯截图，按 lopec 口径识别词条并给出 下/中/上 评级与战力倍率。（需会话配置多模态模型）
+desc: 识别《命运方舟》装备（项链/耳环/戒指/手镯）属性截图，离线按 lopec.kr 评分规则（T4 遗物/古代 下/中/上 档位、主属性百分比、战力倍率）计算并回复评分。词条识别由当前会话的多模态模型完成，评分规则表离线内置，无需联网查表。
+version: 1.0.1
+author: moLing
+repo: https://github.com/yourname/astrbot_plugin_loa_score
+astrbot_version: ">=4.5.0"
