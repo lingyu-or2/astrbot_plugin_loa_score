@@ -2,7 +2,13 @@
   "vision_enabled": {
     "description": "启用截图识别",
     "type": "bool",
-    "hint": "关闭后 /首饰评分 不再调用多模态模型识别截图。识别依赖当前会话配置的对话模型支持图片输入（如 glm-4v / qwen-vl / gemini 等）",
+    "hint": "关闭后 /首饰评分 不再调用多模态模型识别截图。识别依赖所用的对话模型支持图片输入（如 glm-4v / qwen-vl / gemini 等）",
     "default": true
+  },
+  "vision_provider_id": {
+    "description": "识别专用提供商 ID",
+    "type": "string",
+    "hint": "填写后截图识别固定使用该提供商（用于会话模型不支持图片的情况：聊天继续用会话模型，识别走这里的视觉模型）。填 WebUI 提供商列表里的 ID；留空则用会话当前模型",
+    "default": ""
   }
 }

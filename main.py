@@ -73,12 +73,14 @@ class LoaScorePlugin(Star):
         self.tmp_dir = self.data_dir / 'tmp'
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
+        self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
 
     async def terminate(self):
         logger.info('[loa_score] 插件已卸载')
 
     def _reload_config(self):
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
+        self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
 
     async def _save_temp_image(self, image_data: bytes, ext: str) -> Path:
         path = self.tmp_dir / f'score_{int(time.time() * 1000)}.{ext}'
@@ -134,7 +136,9 @@ class LoaScorePlugin(Star):
                 return
             image_path = await self._save_temp_image(image_data, ext)
 
-            item, err = await extract_item(self.context, event, str(image_path))
+            item, err = await extract_item(
+                self.context, event, str(image_path),
+                provider_id=self.vision_provider_id)
             try:
                 image_path.unlink(missing_ok=True)
             except Exception:

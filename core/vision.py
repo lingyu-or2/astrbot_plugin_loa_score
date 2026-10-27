@@ -251,19 +251,32 @@ def _vision_error_msg(kind: str, desc: str) -> str:
     return '\n'.join(lines)
 
 
-async def extract_item(context, event, image_path: str):
-    """调用当前会话的多模态模型识别装备截图。
+async def extract_item(context, event, image_path: str, provider_id: str = ''):
+    """调用多模态模型识别装备截图。
 
+    provider_id 非空时用该指定提供商（识别专用视觉模型），否则用会话当前提供商。
     返回 (item_dict 或 None, 错误信息)。item_dict 已 normalize。
     """
-    try:
-        provider = await context.get_using_provider_async(umo=event.unified_msg_origin)
-    except Exception as e:
-        return None, f'获取模型提供商失败: {e}'
-    if provider is None:
-        return None, ('当前会话没有可用的对话模型。\n'
-                      '请先在 AstrBot WebUI 配置一个支持图片输入的模型'
-                      '（如 glm-4v / qwen-vl / gemini 等）再使用截图评分。')
+    provider = None
+    if provider_id:
+        try:
+            provider = context.get_provider_by_id(provider_id)
+        except Exception as e:
+            return None, f'获取指定识别提供商「{provider_id}」失败: {e}'
+        if provider is None:
+            return None, (f'未找到配置的识别提供商「{provider_id}」。\n'
+                          '请在 WebUI「提供商配置」核对 ID，'
+                          '或清空插件配置里的 vision_provider_id 改用会话默认模型。')
+    else:
+        try:
+            provider = await context.get_using_provider_async(umo=event.unified_msg_origin)
+        except Exception as e:
+            return None, f'获取模型提供商失败: {e}'
+        if provider is None:
+            return None, ('当前会话没有可用的对话模型。\n'
+                          '请先在 AstrBot WebUI 配置一个支持图片输入的模型'
+                          '（如 glm-4v / qwen-vl / gemini 等）再使用截图评分，'
+                          '或在插件配置里指定识别专用提供商 vision_provider_id。')
 
     try:
         size_kb = Path(image_path).stat().st_size // 1024

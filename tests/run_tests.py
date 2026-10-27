@@ -450,6 +450,9 @@ class _FakeCtx:
     async def get_using_provider_async(self, umo=None):
         return self._p
 
+    def get_provider_by_id(self, pid):
+        return self._p if pid == 'vision_prov' else None
+
 
 class _FakeEvent:
     unified_msg_origin = 'qq:group:test'
@@ -503,6 +506,17 @@ class _NoneCtx:
 item, err = _asyncio.run(
     vision.extract_item(_NoneCtx(), _FakeEvent(), '/tmp/fake.png'))
 check('无提供商 → 明确指引', item is None and '没有可用的对话模型' in err, err)
+
+# 指定识别专用提供商（vision_provider_id 路径）
+item, err = _asyncio.run(vision.extract_item(
+    _FakeCtx(_FakeProvider(GOOD_JSON)), _FakeEvent(), '/tmp/fake.png',
+    provider_id='vision_prov'))
+check('指定识别提供商成功路径', item is not None and err == '', f'{item} {err}')
+item, err = _asyncio.run(vision.extract_item(
+    _FakeCtx(_FakeProvider(GOOD_JSON)), _FakeEvent(), '/tmp/fake.png',
+    provider_id='no_such'))
+check('指定提供商不存在 → 明确指引', item is None and 'no_such' in err
+      and 'vision_provider_id' in err, err)
 
 # ---------- 6.7 _extract_json 修复管线（glm-4.5v 真机"无法解析"事故回归） ----------
 XJ = vision._extract_json
