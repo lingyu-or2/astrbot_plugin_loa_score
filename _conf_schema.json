@@ -12,6 +12,12 @@
     "default": "",
     "_special": "select_provider"
   },
+  "vision_model": {
+    "description": "识别模型（可选）",
+    "type": "string",
+    "hint": "留空使用识别提供商的默认模型；填写后强制使用该模型。提供商默认是 qwen-image（文生图）或纯文本模型时必须填写，例如 qwen-vl-max、qwen-vl-plus、glm-4v-flash",
+    "default": ""
+  },
   "vision_timeout": {
     "description": "识别超时（秒）",
     "type": "int",

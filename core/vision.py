@@ -248,27 +248,61 @@ def normalize_item(data: dict) -> dict:
             'options': options}
 
 
-def _provider_desc(provider) -> str:
-    """尽力取出提供商/模型/适配器描述（仅用于错误提示与日志，失败返回空串）。"""
+def _provider_model_name(provider) -> str:
+    """取提供商当前模型名（兼容 AstrBot 的 meta.model 为字符串或对象）。"""
+    try:
+        meta = provider.meta()
+        model = getattr(meta, 'model', None)
+        if isinstance(model, str) and model:
+            return model
+        name = getattr(model, 'name', '') or getattr(model, 'id', '')
+        if name:
+            return str(name)
+    except Exception:
+        pass
+    try:
+        return str(provider.get_model() or '')
+    except Exception:
+        return ''
+
+
+def _provider_desc(provider, model_override: str = '') -> str:
+    """提供商/模型/适配器描述；model_override 为插件指定模型时优先展示。"""
     parts = []
     try:
         meta = provider.meta()
         pid = getattr(meta, 'id', '')
         if pid:
             parts.append(str(pid))
-        model = getattr(meta, 'model', None)
-        name = getattr(model, 'name', '') or getattr(model, 'id', '')
-        if name:
-            parts.append(str(name))
     except Exception:
         pass
+    override = (model_override or '').strip()
+    name = override or _provider_model_name(provider)
+    if name:
+        parts.append(f'{name}（插件指定）' if override else str(name))
     parts.append(f'适配器:{type(provider).__name__}')
     return ' / '.join(parts)
 
 
+# 明显不是「看图聊天」模型的名称特征，提前拦截避免无谓的接口调用
+_IMAGE_GEN_MARKERS = (
+    'qwen-image', 'wanx', 'dall-e', 'dall·e', 'cogview', 'seedream',
+    'stable-diffusion', 'midjourney', 'imagen', 'flux', 'text-to-image', 't2i',
+)
+
+
+def _non_chat_model_hint(model_name: str) -> str:
+    name = (model_name or '').lower()
+    if not name:
+        return ''
+    if any(marker in name for marker in _IMAGE_GEN_MARKERS):
+        return '是文生图/图像生成模型，不能用于看图识别'
+    return ''
+
+
 def _vision_error_msg(kind: str, desc: str) -> str:
     if kind == '未收到图片':
-        lines = [f'模型回复「{kind}」，图片可能没有到达模型。']
+        lines = [f'模型回复「{kind}」，图片没有到达模型。']
     else:
         lines = [f'模型回复「{kind}」。如果截图确实是装备界面，'
                  '可能是模型没看清，或图片实际上没有到达模型。']
@@ -276,11 +310,12 @@ def _vision_error_msg(kind: str, desc: str) -> str:
         lines.append(f'当前识别模型：{desc}')
     lines.append(
         '排查步骤：\n'
-        '1. 查 AstrBot 日志：出现「检测到图片请求失败」= 接口拒收了图片，'
-        'AstrBot 已自动去掉图片纯文本重试（该接口/网关实际不支持图片输入）；\n'
-        '2. 出现「图片预处理结果为空」= 图片转换失败被忽略；\n'
-        '3. 快速验证：在 WebUI 聊天页直接发同一张图让模型描述，同样看不见 = 接口问题，\n'
-        '   请在「提供商配置」换用多模态模型（glm-4v / qwen-vl / gpt-4o / gemini）后重试。'
+        '1. 确认该模型支持图片输入（不是文生图/纯文本模型）；\n'
+        '2. 在 AstrBot WebUI 聊天页直接发同一张图让模型描述：\n'
+        '   如果同样看不见，说明图片在提供商/网关层被丢弃或未识别（不是插件问题）；\n'
+        '3. 查 AstrBot 日志：出现「检测到图片请求失败」或「图片预处理结果为空」按提示处理；\n'
+        '4. 换用确认支持图片输入的多模态模型/提供商'
+        '（qwen-vl-max / glm-4v-flash / gpt-4o / gemini）。'
     )
     return '\n'.join(lines)
 
@@ -311,7 +346,10 @@ def _resolve_provider(context, provider_id: str):
             if label:
                 names.add(str(label))
             model = getattr(meta, 'model', None)
-            if model is not None:
+            if isinstance(model, str):
+                if model:
+                    names.add(model)
+            elif model is not None:
                 names.add(str(getattr(model, 'name', '') or ''))
                 names.add(str(getattr(model, 'id', '') or ''))
             if provider_id in names:
@@ -322,10 +360,11 @@ def _resolve_provider(context, provider_id: str):
 
 
 async def extract_item(context, event, image_path: str, provider_id: str = '',
-                       timeout: float = None):
+                       model: str = '', timeout: float = None):
     """调用多模态模型识别装备截图。
 
-    provider_id 非空时用该指定提供商（识别专用视觉模型），否则用会话当前提供商。
+    provider_id 非空时用该指定提供商；model 非空时强制使用该模型
+    （透传 Provider.text_chat 的 model 参数，用于提供商默认模型不支持看图的情况）。
     返回 (item_dict 或 None, 错误信息)。item_dict 已 normalize。
     """
     provider = None
@@ -344,23 +383,44 @@ async def extract_item(context, event, image_path: str, provider_id: str = '',
                           '（如 glm-4v / qwen-vl / gemini 等）再使用截图评分，'
                           '或在插件配置里指定识别专用提供商。')
 
+    effective_model = (model or '').strip()
+    model_name = effective_model or _provider_model_name(provider)
+    bad_model = _non_chat_model_hint(model_name)
+    if bad_model:
+        desc = _provider_desc(provider, effective_model)
+        logger.warning(f'[loa_score] 识别模型不可用于看图: {desc}')
+        return None, (f'识别模型「{model_name}」{bad_model}。\n'
+                      f'当前识别模型：{desc}\n'
+                      '请在插件配置把「识别模型」填为 qwen-vl-max / qwen-vl-plus / '
+                      'glm-4v-flash 等支持图片输入的模型，或在提供商配置换用视觉模型。')
+
+    desc = _provider_desc(provider, effective_model)
     try:
         size_kb = Path(image_path).stat().st_size // 1024
     except Exception:
         size_kb = -1
-    logger.info(f'[loa_score] 发送识别请求: {_provider_desc(provider)}, 图片 {size_kb}KB')
+    logger.info(f'[loa_score] 发送识别请求: {desc}, 图片 {size_kb}KB')
 
     try:
         resp = await asyncio.wait_for(
             provider.text_chat(
                 prompt=VISION_PROMPT,
                 image_urls=[str(image_path)],
+                model=effective_model or None,
             ),
             timeout=timeout or VISION_TIMEOUT,
         )
     except asyncio.TimeoutError:
         return None, '模型识别超时，请稍后重试或换一张更清晰的截图。'
     except Exception as e:
+        msg = str(e)
+        low = msg.lower()
+        if 'model_not_supported' in low or 'unsupported model' in low:
+            return None, (f'识别模型不可用：{msg}\n'
+                          f'当前识别模型：{desc}\n'
+                          '该模型不是聊天/看图模型（例如 qwen-image 是文生图模型）。\n'
+                          '请在插件配置把「识别模型」填为 qwen-vl-max / qwen-vl-plus / '
+                          'glm-4v-flash，或在提供商配置换用视觉模型。')
         return None, f'模型调用失败: {e}'
 
     text = ''
@@ -369,20 +429,21 @@ async def extract_item(context, event, image_path: str, provider_id: str = '',
     except Exception:
         pass
     if not text:
-        return None, ('模型没有返回内容——当前模型很可能不支持图片输入。\n'
-                      '请在 WebUI 换成多模态模型（glm-4v / qwen-vl / gpt-4o / gemini 等）后重试。')
+        return None, ('模型没有返回内容——可能是模型不支持图片，或图片没有正确送达。\n'
+                      + (f'当前识别模型：{desc}\n' if desc else '')
+                      + '请在插件配置把「识别模型」填为 qwen-vl-max / qwen-vl-plus / '
+                        'glm-4v-flash，或在 WebUI 换成多模态模型后重试。')
 
     data = _extract_json(text)
     if data is None:
         logger.warning(f'[loa_score] 模型输出无法解析为 JSON: {text[:300]}')
-        desc = _provider_desc(provider)
-        return None, ('模型输出无法解析（可能不支持图片输入，把提示词当成了普通聊天）。\n'
+        return None, ('模型输出无法解析（可能没收到图片，把提示词当成了普通聊天）。\n'
                       + (f'当前识别模型：{desc}\n' if desc else '')
-                      + '请在 WebUI 换成多模态模型（glm-4v / qwen-vl / gpt-4o / gemini 等）后重试。')
+                      + '请在插件配置把「识别模型」填为 qwen-vl-max / qwen-vl-plus / '
+                        'glm-4v-flash 后重试。')
     err_code = data.get('error')
     if err_code:
         err_code = str(err_code)
-        desc = _provider_desc(provider)
         if err_code in ('no_image_visible', 'not_equipment'):
             kind = '未收到图片' if err_code == 'no_image_visible' else '未识别到装备界面'
             logger.warning(f'[loa_score] 模型返回 {err_code}: {text[:300]}')
@@ -394,8 +455,7 @@ async def extract_item(context, event, image_path: str, provider_id: str = '',
     item = normalize_item(data)
     if not any((item['name'], item['item_type'], item['main_stat'],
                 item['stats'], item['options'])):
-        desc = _provider_desc(provider)
         return None, ('模型没有识别到任何装备信息（返回了空结果）。\n'
                       + (f'当前识别模型：{desc}\n' if desc else '')
-                      + '请确认截图包含装备属性详情后重试；若模型不支持图片，请换多模态模型。')
+                      + '请确认截图包含装备属性详情后重试；若图片没有送达模型，请按上一条排查。')
     return item, ''

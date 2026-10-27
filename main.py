@@ -6,7 +6,7 @@
 - 手镯：特殊词条 下/中/上评级 + 战力倍率合计（属性行不参与评级）。
 
 评分规则表 data/tables.json 由 lopec 前端逆向数据离线构建；
-词条识别由多模态模型（会话模型或识别专用提供商）完成，评分全部离线计算。
+词条识别由多模态模型完成（提供商与模型均可在插件配置指定），评分全部离线计算。
 """
 
 import asyncio
@@ -29,7 +29,7 @@ except ImportError:  # 兼容以目录为根的直接加载
     from core.vision import VISION_TIMEOUT, extract_item
 
 PLUGIN_NAME = 'astrbot_plugin_loa_score'
-PLUGIN_VERSION = '1.2.0'
+PLUGIN_VERSION = '1.2.1'
 
 SLOT_ARG = {'手镯': 'bracelet', '팔찌': 'bracelet', 'bracelet': 'bracelet',
             '项链': 'necklace', '목걸이': 'necklace', 'necklace': 'necklace',
@@ -54,7 +54,7 @@ HELP_TEXT = """📿 命运方舟首饰评分（lopec 口径 · 仅 T4）
   · 手镯：特殊词条 下/中/上 评级 + 特殊词条战力倍率（属性行另有 lopec 属性系数）
 
 说明：
-  · 识别需要支持图片输入的模型；可在插件配置指定「识别专用提供商」
+  · 识别需要支持图片输入的模型；可在插件配置指定「识别专用提供商」与「识别模型」
   · 仅支持 T4（道具阶级 4）；T3 装备会直接提示不支持
   · 一次只评分第一张图，多件请分条发送
   · 词条与部位不符时会给出核对提醒，不改变评分"""
@@ -81,6 +81,7 @@ class LoaScorePlugin(Star):
             logger.info(f'[loa_score] 已清理过期临时截图 {removed} 张')
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
         self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
+        self.vision_model = str(self.config.get('vision_model', '') or '').strip()
         self.vision_timeout = self._read_timeout()
 
     async def terminate(self):
@@ -96,6 +97,7 @@ class LoaScorePlugin(Star):
     def _reload_config(self):
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
         self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
+        self.vision_model = str(self.config.get('vision_model', '') or '').strip()
         self.vision_timeout = self._read_timeout()
 
     async def _save_temp_image(self, image_data: bytes, ext: str) -> Path:
@@ -156,6 +158,7 @@ class LoaScorePlugin(Star):
                 item, err = await extract_item(
                     self.context, event, str(image_path),
                     provider_id=self.vision_provider_id,
+                    model=self.vision_model,
                     timeout=self.vision_timeout)
             finally:
                 try:

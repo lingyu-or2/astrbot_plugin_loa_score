@@ -419,6 +419,8 @@ conf = json.loads((ROOT / '_conf_schema.json').read_text(encoding='utf-8'))
 check('配置模式含 vision_enabled', 'vision_enabled' in conf)
 check('配置含识别提供商选择器', conf.get('vision_provider_id', {}).get('_special')
       == 'select_provider', str(conf.get('vision_provider_id')))
+check('配置含识别模型', conf.get('vision_model', {}).get('default') == ''
+      and conf['vision_model'].get('type') == 'string', str(conf.get('vision_model')))
 check('配置含识别超时', conf.get('vision_timeout', {}).get('default') == 120
       and conf['vision_timeout'].get('type') == 'int', str(conf.get('vision_timeout')))
 meta = (ROOT / 'metadata.yaml').read_text(encoding='utf-8')
@@ -569,14 +571,32 @@ class _FakeProvider:
         self.text = text
         self.calls = []
 
-    async def text_chat(self, prompt=None, image_urls=None, **kw):
-        self.calls.append({'prompt': prompt, 'image_urls': image_urls})
+    async def text_chat(self, prompt=None, image_urls=None, model=None, **kw):
+        self.calls.append({'prompt': prompt, 'image_urls': image_urls, 'model': model})
         return _Resp(self.text)
 
     def meta(self):
         return _types.SimpleNamespace(
             id='test_prov',
             model=_types.SimpleNamespace(name='test-vl-1', id='test-vl-1'))
+
+
+class _StringMetaProvider(_FakeProvider):
+    """AstrBot v4.29.3 的 ProviderMeta.model 是字符串。"""
+
+    def __init__(self, text='{"error": "no_image_visible"}',
+                 model='qwen-image-3.0', pid='千问'):
+        super().__init__(text)
+        self._model = model
+        self._pid = pid
+
+    def meta(self):
+        return _types.SimpleNamespace(id=self._pid, model=self._model)
+
+
+class _404Provider(_FakeProvider):
+    async def text_chat(self, *a, **k):
+        raise Exception("Error code: 404 - {'error': {'code': 'model_not_supported'}}")
 
 
 class _FakeCtx:
@@ -616,9 +636,11 @@ if item:
           str(item['options'][0]))
 check('image_urls 传本地路径', p.calls and p.calls[0]['image_urls'] == ['/tmp/fake.png'],
       str(p.calls[:1]))
+check('未指定识别模型时 model=None', p.calls and p.calls[0]['model'] is None,
+      str(p.calls[:1]))
 
 item, err = _run_extract(_FakeProvider('{"error": "no_image_visible"}'))
-check('no_image_visible → 日志排查指引', item is None and '图片可能没有到达模型' in err
+check('no_image_visible → 日志排查指引', item is None and '图片没有到达模型' in err
       and '当前识别模型：test_prov / test-vl-1' in err
       and '适配器:_FakeProvider' in err
       and '检测到图片请求失败' in err, err)
@@ -653,6 +675,34 @@ item, err = _asyncio.run(vision.extract_item(
     provider_id='no_such'))
 check('指定提供商不存在 → 明确指引', item is None and 'no_such' in err
       and 'vision_provider_id' in err, err)
+
+# ---------- 6.6.2 v1.2.1：识别模型覆盖 / 文生图模型拦截 / 字符串模型名 ----------
+p_str = _StringMetaProvider()
+check('提供商描述兼容字符串模型', '千问 / qwen-image-3.0' in vision._provider_desc(p_str),
+      vision._provider_desc(p_str))
+
+p_img = _StringMetaProvider(GOOD_JSON)
+item, err = _asyncio.run(vision.extract_item(_FakeCtx(p_img), _FakeEvent(), '/tmp/fake.png'))
+check('文生图默认模型提前拦截', item is None and '文生图' in err
+      and 'qwen-vl-max' in err, err)
+check('文生图模型不发起调用', not p_img.calls, str(p_img.calls))
+
+p_override = _StringMetaProvider(GOOD_JSON)
+item, err = _asyncio.run(vision.extract_item(
+    _FakeCtx(p_override), _FakeEvent(), '/tmp/fake.png', model='qwen-vl-max'))
+check('识别模型覆盖默认模型', item is not None and err == ''
+      and p_override.calls and p_override.calls[0]['model'] == 'qwen-vl-max',
+      f'{item} {err} {p_override.calls[:1]}')
+
+p_ds = _StringMetaProvider('{"error":"no_image_visible"}', model='deepseek-v4-flash-0731')
+item, err = _asyncio.run(vision.extract_item(_FakeCtx(p_ds), _FakeEvent(), '/tmp/fake.png'))
+check('DeepSeek 视觉模型不被名字拦截', item is None and p_ds.calls
+      and 'DeepSeek 文本模型通常不支持' not in err and 'WebUI' in err, err)
+
+p404 = _404Provider()
+item, err = _run_extract(p404)
+check('model_not_supported → 换模型指引', item is None
+      and '不是聊天/看图模型' in err and 'qwen-vl-max' in err, err)
 
 
 class _FakeCtxByName:
@@ -699,11 +749,15 @@ if main_mod is not None:
     with tempfile.TemporaryDirectory() as td:
         img_path = Path(td) / 'equip.png'
         img_path.write_bytes(b'\x89PNG\r\n\x1a\n' + b'0' * 64)
-        plugin.context = _FakeCtx(_FakeProvider(GOOD_JSON))
+        prov = _FakeProvider(GOOD_JSON)
+        plugin.context = _FakeCtx(prov)
+        plugin.config['vision_model'] = 'qwen-vl-max'
         event = _FakeScoreEvent([_FakeImage(img_path)])
         replies = _asyncio_init.run(_collect(plugin.score_item(event)))
         check('端到端评分成功',
               any('装备' in r and '评分' in r for r in replies), str(replies)[:300])
+        check('端到端透传识别模型',
+              prov.calls and prov.calls[0]['model'] == 'qwen-vl-max', str(prov.calls[:1]))
         check('评分后临时截图已清理', not list(plugin.tmp_dir.iterdir()),
               str(list(plugin.tmp_dir.iterdir())))
 
