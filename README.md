@@ -1,5 +1,8 @@
 # astrbot_plugin_loa_score — 命运方舟首饰评分
 
+[![AstrBot 插件](https://img.shields.io/badge/AstrBot-插件-purple)](https://docs.astrbot.app/)
+![Version](https://img.shields.io/badge/version-1.0.1-blue)
+
 发送《命运方舟》装备（项链/耳环/戒指/手镯）属性截图，机器人识别词条后按
 **lopec.kr 的评分口径**回复评分。评分规则表离线内置（由 lopec 前端逆向数据构建），
 识别由当前会话配置的**多模态模型**完成。
@@ -50,7 +53,7 @@ astrbot_plugin_loa_score/
 │   ├── imageio.py     # 图片获取与校验
 │   └── vision.py      # LLM 视觉识别（Provider.text_chat + image_urls）
 ├── data/
-│   └── tables.json    # 评分规则表（构建脚本见 战力插件/.lopec_research/generate_tables.py）
+│   └── tables.json                    # 评分规则表（由 lopec.kr 前端数据离线预构建，随插件分发，无需生成）
 ├── tests/
 │   └── run_tests.py   # 离线自测（无需 AstrBot 环境）
 ├── metadata.yaml
