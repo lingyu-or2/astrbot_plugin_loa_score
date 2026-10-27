@@ -501,6 +501,30 @@ item, err = _asyncio.run(
     vision.extract_item(_NoneCtx(), _FakeEvent(), '/tmp/fake.png'))
 check('无提供商 → 明确指引', item is None and '没有可用的对话模型' in err, err)
 
+# ---------- 6.7 _extract_json 修复管线（glm-4.5v 真机"无法解析"事故回归） ----------
+XJ = vision._extract_json
+robust_cases = {
+    '裸JSON': '{"item_type":"necklace"}',
+    '代码块': '```json\n{"item_type":"necklace"}\n```',
+    '前后说明文字': '好的，识别结果如下：\n{"item_type":"necklace"}\n希望对你有帮助！',
+    '照抄注释': '{"item_type":"necklace", // 部位\n"grade":"ancient"}',
+    '块注释': '{/* 识别结果 */\n"item_type":"necklace"}',
+    '尾逗号': '{"item_type":"necklace","stats":[{"name":"体力","value":1}],}',
+    '中文引号冒号': '{"item_type"："necklace"，"grade"："ancient"}',
+    '单引号': "{'item_type':'necklace','grade':'ancient'}",
+    'Python字面量': '{"main_stat": None, "tier": null, "ok": True}',
+    '注释+尾逗号叠加': '{\n"item_type":"bracelet", // 手镯\n"options":[],\n}',
+    '字符串内斜杠不被注释误伤': '{"text":"https://a//b 不删"}',
+}
+for name, text in robust_cases.items():
+    got = XJ(text)
+    ok = isinstance(got, dict) and len(got) > 0
+    if name == '字符串内斜杠不被注释误伤':
+        ok = ok and got.get('text') == 'https://a//b 不删'
+    check(f'提取 {name}', ok, repr(got))
+check('无 JSON 的闲聊返回 None', XJ('这张图片我看不清楚哦~') is None)
+check('数组顶层不算对象', XJ('[1,2,3]') is None)
+
 print()
 print(f'通过 {PASS} 项，失败 {len(FAIL)} 项')
 if FAIL:

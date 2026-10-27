@@ -16,17 +16,31 @@ from .cnparse import CLAUSE_TYPES
 VISION_PROMPT = """你是《命运方舟》装备截图识别器。请只根据图片内容，输出一个 JSON 对象（不要输出任何其他文字、不要用代码块）。
 
 {
-  "item_type": "necklace|earring|ring|bracelet|other",  // 部位：项链/耳环/戒指/手镯；看不出来填 other
-  "grade": "relic|ancient|unknown",  // 品级：遗物(relic)，古代(ancient)；看不出来填 unknown
-  "tier": 4,                         // 能看出 道具阶层4 就填 4，否则填 null
-  "quality": 94,                     // 「品质」后面显示的数字（如 品质 94）；没有则填 null
-  "main_stat": {"name": "敏捷", "value": 14016},  // 主属性行；没有则填 null
-  "stats": [{"name": "专长", "value": 91}],        // 其余属性行，没有则 []
-  "options": [                                    // 特殊效果行，逐行原样转写（不要翻译、不要合并、不要省略句号）
-    {"text": "额外伤害增加2.5%。", "type": "add_dmg"},
-    {"text": "暴击率增加4.2%。", "type": "crit_rate"}
+  "item_type": "necklace",
+  "grade": "ancient",
+  "tier": 4,
+  "quality": 94,
+  "main_stat": {"name": "力量", "value": 17348},
+  "stats": [{"name": "体力", "value": 4062}],
+  "options": [
+    {"text": "烙印力 +8.00%。", "type": "ally_dmg"},
+    {"text": "对敌人造成的伤害+2.00%。", "type": "enemy_dmg"}
   ]
 }
+
+字段说明：
+- item_type：部位，necklace=项链 / earring=耳环 / ring=戒指 / bracelet=手镯；看不出来填 other
+- grade：品级，relic=遗物 / ancient=古代；看不出来填 unknown
+- tier：道具阶级，看得到「道具阶级4」就填 4，否则填 null
+- quality：「品质」后面的数字；没有填 null
+- main_stat：主属性行（力量/敏捷/智力的大数值行，全职业三行相同时任取其一）；没有填 null
+- stats：其余属性行（体力/会心/专长/迅捷/制压/忍耐/熟练等）；没有填 []
+- options：特殊效果词条行，逐行原样转写（不要翻译、不要合并、不要省略句号）
+
+输出规则（必须严格遵守）：
+- 直接输出 JSON 对象本身，第一个字符是 {，最后一个字符是 }；
+- 不要 markdown 代码块、不要任何注释（不要 // ）、不要尾逗号，字符串一律用英文双引号；
+- 数值不加引号，空值用 null。
 
 type 字段的可选值与含义：
 __CLAUSE_LIST__
@@ -56,23 +70,102 @@ VISION_PROMPT = VISION_PROMPT.replace(
 VISION_TIMEOUT = 120
 
 
-def _extract_json(text: str):
-    """从模型输出中稳健提取 JSON 对象。"""
-    text = (text or '').strip()
-    m = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.S)
-    if m:
-        text = m.group(1)
+# 中文全角引号/冒号 → ASCII（仅解析失败后的修复阶段使用）
+_PUNCT_NORM = {'\uff1a': ':', '\u201c': '"', '\u201d': '"', '\u2018': '"', '\u2019': '"'}
+
+
+def _strip_comments(s: str) -> str:
+    """去掉 // 行注释与 /* */ 块注释（字符串字面量内的不动）。"""
+    out = []
+    i, n = 0, len(s)
+    in_str = False
+    quote = ''
+    while i < n:
+        c = s[i]
+        if in_str:
+            out.append(c)
+            if c == '\\' and i + 1 < n:
+                out.append(s[i + 1])
+                i += 2
+                continue
+            if c == quote:
+                in_str = False
+            i += 1
+            continue
+        if c in '"\'':
+            in_str = True
+            quote = c
+            out.append(c)
+            i += 1
+            continue
+        if c == '/' and i + 1 < n and s[i + 1] == '/':
+            while i < n and s[i] != '\n':
+                i += 1
+            continue
+        if c == '/' and i + 1 < n and s[i + 1] == '*':
+            i += 2
+            while i + 1 < n and not (s[i] == '*' and s[i + 1] == '/'):
+                i += 1
+            i += 2
+            continue
+        out.append(c)
+        i += 1
+    return ''.join(out)
+
+
+def _try_loads(s: str):
     try:
-        return json.loads(text)
+        v = json.loads(s)
+        return v if isinstance(v, dict) else None
     except Exception:
-        pass
-    start, end = text.find('{'), text.rfind('}')
-    if 0 <= start < end:
-        try:
-            return json.loads(text[start:end + 1])
-        except Exception:
-            return None
-    return None
+        return None
+
+
+def _extract_json(text: str):
+    """从模型输出中稳健提取 JSON 对象。
+
+    逐级加码修复（任何一级成功即返回）：整体解析 → 代码块 → 大括号区间 →
+    去注释 → 中文引号/冒号归一 → 去尾逗号 → 单引号/Python 字面量修复。
+    """
+    raw = (text or '').strip()
+    if not raw:
+        return None
+    v = _try_loads(raw)
+    if v is not None:
+        return v
+    m = re.search(r'```(?:json)?\s*(.+?)\s*```', raw, re.S)
+    if m:
+        v = _try_loads(m.group(1))
+        if v is not None:
+            return v
+    start, end = raw.find('{'), raw.rfind('}')
+    if not (0 <= start < end):
+        return None
+    s = raw[start:end + 1]
+    v = _try_loads(s)
+    if v is not None:
+        return v
+    s = _strip_comments(s)
+    v = _try_loads(s)
+    if v is not None:
+        return v
+    s = ''.join(_PUNCT_NORM.get(ch, ch) for ch in s)
+    # 全角逗号仅在"结构位"（前后邻引号/括号/数字）转半角，避免破坏字符串内容里的中文逗号
+    s = re.sub(r'(?<=[\"\u007d\]\d])\uff0c(?=[\"\u007b\[\u007d\]])', ',', s)
+    v = _try_loads(s)
+    if v is not None:
+        return v
+    s = re.sub(r',\s*([}\]])', r'\1', s)
+    v = _try_loads(s)
+    if v is not None:
+        return v
+    if "'" in s and '"' not in s:
+        v = _try_loads(s.replace("'", '"'))
+        if v is not None:
+            return v
+    s = re.sub(r'\b(None|True|False)\b',
+               lambda mm: {'None': 'null', 'True': 'true', 'False': 'false'}[mm.group(1)], s)
+    return _try_loads(s)
 
 
 def normalize_item(data: dict) -> dict:
