@@ -6,9 +6,16 @@
     "default": true
   },
   "vision_provider_id": {
-    "description": "识别专用提供商 ID",
+    "description": "识别专用提供商",
     "type": "string",
-    "hint": "填写后截图识别固定使用该提供商（用于会话模型不支持图片的情况：聊天继续用会话模型，识别走这里的视觉模型）。填 WebUI 提供商列表里的 ID；留空则用会话当前模型",
-    "default": ""
+    "hint": "选择后截图识别固定使用该提供商（用于会话模型不支持图片的情况：聊天继续用会话模型，识别走这里的视觉模型）。留空则用会话当前模型",
+    "default": "",
+    "_special": "select_provider"
+  },
+  "vision_timeout": {
+    "description": "识别超时（秒）",
+    "type": "int",
+    "hint": "多模态模型识别截图的超时时间，默认 120 秒；网络慢或大图可调高（有效范围 10–600）",
+    "default": 120
   }
 }

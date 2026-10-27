@@ -18,6 +18,19 @@ GRADE_ORDER_CN = ['下', '中', '上']
 SLOT_CN = {'necklace': '项链', 'earring': '耳环', 'ring': '戒指', 'bracelet': '手镯'}
 GRADE_TYPE_CN = {'relic': '遗物', 'ancient': '古代'}
 
+# T4 饰品词条的部位专属规则（lopec 模拟器 G 表，2026-10-25 逆向）。
+# 只用于提示「词条与部位不符」，不改变评分结果。
+SLOT_EXCLUSIVE_OPTIONS = {
+    'necklace': {'추가 피해', '적에게 주는 피해', '낙인력',
+                 '세레나데, 신앙, 조화 게이지 획득량'},
+    'ring': {'치명타 적중률', '치명타 피해',
+             '아군 공격력 강화 효과', '아군 피해량 강화 효과'},
+    'earring': {'파티원 회복 효과', '파티원 보호막 효과'},
+}
+_OPTION_SLOT = {kind: slot for slot, kinds in SLOT_EXCLUSIVE_OPTIONS.items()
+                for kind in kinds}
+_BRACELET_STAT_NAMES = {'会心', '专长', '迅捷', '치명', '특화', '신속'}
+
 _TABLES = None
 
 
@@ -145,16 +158,27 @@ def grade_bracelet(item: dict, force_grade: str = None):
                               + (f' ×{count}' if count > 1 else ''))
     # 手镯的主属性（如 敏捷+14016）也是属性行，并入展示
     stats = list(item.get('stats') or [])
+    stat_points = sum(float(s['value']) for s in stats
+                      if s.get('name') in _BRACELET_STAT_NAMES)
+    stat_power_note = ''
+    weight = tables.get('bracelet_stat_weight') or 0
+    if stat_points and weight:
+        stat_power_note = (f'会心/专长/迅捷共 {stat_points:g} 点 × {weight * 100:g}%/点 '
+                           f'= +{stat_points * weight * 100:.2f}%'
+                           '（lopec 属性口径，与特殊词条合计分列）')
     if item.get('main_stat'):
         stats = [dict(item['main_stat'])] + stats
     return {
+        'name': item.get('name'),
         'slot': 'bracelet',
         'grade_type': grade_type,
+        'quality': item.get('quality'),
         'stats': stats,
         'main_stat': None,
         'stat_percent': None,
         'options': options,
         'total_mult': total_mult,
+        'stat_power_note': stat_power_note,
         'leftovers': leftover_parts + list(unknown),
     }
 
@@ -181,6 +205,7 @@ def grade_accessory(item: dict, force_grade: str = None):
     weights = tables['accessory_weights']
     options, total_mult = [], 1.0
     unknown = []
+    warnings = []
     for raw in item.get('options', []):
         text = raw['raw'] if isinstance(raw, dict) else raw
         parsed = cnparse.parse_accessory_option(text, kinds)
@@ -189,6 +214,13 @@ def grade_accessory(item: dict, force_grade: str = None):
             continue
         kind_kr, value = parsed
         info = kinds[kind_kr]
+        cn_name = (info.get('cn') or [kind_kr])[0]
+        allowed_slot = _OPTION_SLOT.get(kind_kr)
+        if allowed_slot and allowed_slot != slot:
+            warn = (f'「{cn_name}」通常只出现在{SLOT_CN.get(allowed_slot, allowed_slot)}上'
+                    f'（当前为{SLOT_CN.get(slot, slot)}），请核对截图或部位参数')
+            if warn not in warnings:
+                warnings.append(warn)
         # T4 权威词条池（2026-10-25 国服全量词条表确认）：遗物/古代共用同一套阶梯，
         # 即 lopec 表的「T4 고대」行；「T4 유물」低档行在国服 T4 不存在，不做回退。
         vals = info.get('ancient') or []
@@ -204,7 +236,7 @@ def grade_accessory(item: dict, force_grade: str = None):
             total_mult *= opt_mult
         options.append({
             'kind': kind_kr,
-            'cn': (info.get('cn') or [kind_kr])[0],
+            'cn': cn_name,
             'value': value,
             'percent': info.get('percent', True),
             'grade_type': 'ancient' if grade_idx is not None else None,
@@ -214,6 +246,7 @@ def grade_accessory(item: dict, force_grade: str = None):
             'opt_mult': opt_mult,
         })
     return {
+        'name': item.get('name'),
         'slot': slot,
         'grade_type': grade_type,
         'quality': item.get('quality'),
@@ -223,6 +256,7 @@ def grade_accessory(item: dict, force_grade: str = None):
         'percent_note': percent_note,
         'options': options,
         'total_mult': total_mult if len(options) else None,
+        'warnings': warnings,
         'leftovers': unknown,
     }
 
@@ -233,12 +267,29 @@ def T2CN(gt):
 
 def grade_item(item: dict, force_grade: str = None):
     """统一入口。item 来自 vision 识别结果（经 cnparse 规范化）。"""
+    item = dict(item or {})
+    try:
+        tier = int(item.get('tier')) if item.get('tier') is not None else None
+    except (TypeError, ValueError):
+        tier = None
+    if tier == 3:
+        return {'slot': item.get('item_type'),
+                'error': ('识别到该装备为 T3（道具阶级 3）。本插件评分规则仅覆盖 '
+                          'T4（道具阶级 4，遗物/古代）——T3 的主属性区间与词条阶梯都不同，'
+                          '按 T4 评会失真。请换 T4 装备截图，或核对截图上的道具阶级。')}
+    if item.get('item_type') not in ('necklace', 'earring', 'ring', 'bracelet'):
+        item['item_type'] = cnparse.guess_item_type(item.get('name') or '')
+    if item.get('grade') not in ('relic', 'ancient'):
+        item['grade'] = cnparse.guess_grade(item.get('name') or '')
     slot = item.get('item_type')
     if slot == 'bracelet':
         return grade_bracelet(item, force_grade)
     if slot in ('necklace', 'earring', 'ring'):
         return grade_accessory(item, force_grade)
-    return {'slot': slot, 'error': f'暂不支持的部位类型: {slot or "未知"}（仅支持 项链/耳环/戒指/手镯）'}
+    return {'slot': slot,
+            'error': ('未能确定装备部位（项链/耳环/戒指/手镯）。\n'
+                      '请截图包含装备名称/部位图标的界面，'
+                      '或用指令参数指定：/首饰评分 手镯 古代')}
 
 
 # ---------- 输出格式化 ----------
@@ -264,18 +315,34 @@ def format_result(result: dict) -> str:
     if result.get('error'):
         return f'❌ {result["error"]}'
     slot = result.get('slot')
-    lines = ['📊 命运方舟装备评分（lopec 口径 · 仅 T4）', '']
-    grade_type = result.get('grade_type')
     slot_txt = SLOT_CN.get(slot, slot or '未知')
-    lines.append(f'🧿 装备：{slot_txt}｜{T2CN(grade_type)}' if grade_type in ('relic', 'ancient')
-                 else f'🧿 装备：{slot_txt}｜品级未知（同时给出遗物/古代两套评级）')
+    grade_type = result.get('grade_type')
+    lines = ['📊 命运方舟装备评分（lopec 口径 · 仅 T4）', '']
+
+    head = []
+    if result.get('name'):
+        head.append(str(result['name']))
+    head.append(slot_txt)
+    if grade_type in ('relic', 'ancient'):
+        head.append(T2CN(grade_type))
+        head_note = ''
+    elif slot == 'bracelet':
+        head_note = '（品级未识别，同时给出遗物/古代两套评级）'
+    else:
+        head_note = '（品级未识别；T4 词条阶梯遗物/古代共用）'
+    lines.append('🧿 装备：' + '｜'.join(head) + head_note)
 
     stats = result.get('stats') or []
     if stats:
         stat_txt = ' / '.join(f"{s['name']}+{s['value']:g}" for s in stats)
-        lines.append(f'属性：{stat_txt}' + ('（属性行不参与评级）' if slot == 'bracelet' else ''))
+        lines.append(f'属性：{stat_txt}'
+                     + ('（属性行不参与词条评级）' if slot == 'bracelet' else ''))
 
     if slot == 'bracelet':
+        if result.get('stat_power_note'):
+            lines.append(f'属性战力：{result["stat_power_note"]}')
+        if result.get('quality') is not None:
+            lines.append(f'游戏内品质：{result["quality"]:g}')
         lines.append('')
         lines.append('【特殊词条】')
         if not result['options']:
@@ -292,16 +359,16 @@ def format_result(result: dict) -> str:
     else:
         ms = result.get('main_stat')
         lines.append('')
-        if result.get('stat_percent') is not None:
+        if result.get('stat_percent') is not None and ms:
             rng = load_tables()['stat_ranges'].get(slot, {})
             lines.append(
                 f'主属性：{ms["name"]} {ms["value"]:g} → lopec 百分比 '
                 f'{result["stat_percent"]:.2f}%（区间 {rng.get("min")}~{rng.get("max")}）')
-            if result.get('quality') is not None:
-                lines.append(f'游戏内品质：{result["quality"]:g}'
-                             '（品质与 lopec 百分比口径不同，非线性对应）')
         elif result.get('percent_note'):
             lines.append(f'主属性：{result["percent_note"]}')
+        if result.get('quality') is not None:
+            lines.append(f'游戏内品质：{result["quality"]:g}'
+                         '（lopec 百分比 ≠ 游戏内品质，非线性对应）')
         lines.append('')
         lines.append('【词条评级】')
         if not result['options']:
@@ -316,11 +383,20 @@ def format_result(result: dict) -> str:
         if tm and tm != 1.0:
             lines.append(f'➡ 词条合计战力倍率：×{tm:.4f}（{(tm - 1) * 100:+.3f}%）')
 
+    if result.get('warnings'):
+        lines.append('')
+        lines.append('⚠️ 词条与部位不符（疑似识别错误或部位指定有误）：')
+        for w in result['warnings']:
+            lines.append(f'    · {w}')
+
     if result.get('leftovers'):
+        leftovers = result['leftovers']
         lines.append('')
         lines.append('⚠️ 以下内容不在 T4 规则表内，未参与评级：')
-        for u in result['leftovers'][:6]:
+        for u in leftovers[:6]:
             lines.append(f'    · {u}')
+        if len(leftovers) > 6:
+            lines.append(f'    · …另有 {len(leftovers) - 6} 条未列出')
     lines.append('')
     lines.append('数据口径：lopec.kr（2026-10-25 逆向），评级为 T4 遗物/古代的 下/中/上 档。')
     return '\n'.join(lines)

@@ -8,13 +8,14 @@
 
 import ast
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from core import cnparse, grading  # noqa: E402
+from core import cnparse, grading, imageio  # noqa: E402
 
 PASS = 0
 FAIL = []
@@ -97,6 +98,23 @@ check('池外数值报未匹配并给出阶梯', pool_opt['grade_idx'] is None
       and '0.7 / 1.6 / 2.6' in pool_opt['ladder_note'], str(pool_opt))
 check('池外数值不给战力倍率', pool_opt['opt_mult'] is None, str(pool_opt))
 
+# ---------- 1.6 词条行容错（v1.2.0：千分位 / 百分号缺失或多写 / 尾注） ----------
+KO = tables['accessory_options']
+check('千分位数值', cnparse.parse_accessory_option('最大生命值 +3,250', KO)
+      == ('최대 생명력', 3250.0), str(cnparse.parse_accessory_option('最大生命值 +3,250', KO)))
+check('缺百分号（数值在阶梯内）', cnparse.parse_accessory_option('额外伤害 +1.60', KO)
+      == ('추가 피해', 1.6), str(cnparse.parse_accessory_option('额外伤害 +1.60', KO)))
+check('多写百分号（固定值词条）', cnparse.parse_accessory_option('最大生命值 +3250%', KO)
+      == ('최대 생명력', 3250.0), str(cnparse.parse_accessory_option('最大生命值 +3250%', KO)))
+check('行尾括号说明', cnparse.parse_accessory_option('额外伤害 +1.60%（不可叠加）', KO)
+      == ('추가 피해', 1.6), str(cnparse.parse_accessory_option('额外伤害 +1.60%（不可叠加）', KO)))
+check('未知词条不误配', cnparse.parse_accessory_option('未知词条0', KO) is None,
+      str(cnparse.parse_accessory_option('未知词条0', KO)))
+check('长名称优先不被抢占', cnparse.parse_accessory_option('攻击力 +1.55%', KO)
+      == ('공격력', 1.55), str(cnparse.parse_accessory_option('攻击力 +1.55%', KO)))
+check('全角符号归一', cnparse.parse_accessory_option('额外伤害 ＋1.60％', KO)
+      == ('추가 피해', 1.6), str(cnparse.parse_accessory_option('额外伤害 ＋1.60％', KO)))
+
 # ---------- 2. 中文子句解析 ----------
 cases = [
     ('暴击率增加4.2%。', [('crit_rate', [4.2])]),
@@ -164,7 +182,7 @@ txt = grading.format_result(res)
 check('输出含合计倍率', '×1.0764' in txt and '+7.64%' in txt, txt[:200])
 check('输出含遗物「上」', '遗物「上」' in txt, txt[:300])
 check('输出含古代「下」', '古代「下」' in txt, txt[:300])
-check('输出含属性行说明', '敏捷+14016' in txt and '不参与评级' in txt, txt[:300])
+check('输出含属性行说明', '敏捷+14016' in txt and '不参与词条评级' in txt, txt[:300])
 
 # 覆盖切分：多出来的子句要报残留
 res2 = grading.grade_bracelet({
@@ -320,6 +338,63 @@ check('图5 暴伤抗性倍率 160', opt_res['atk_mult'] == 160, str(opt_res['at
 expect5 = (1 + 126 / 10000) * (1 + 160 / 10000)
 check('图5 合计倍率', abs(r_img5['total_mult'] - expect5) < 1e-9, str(r_img5['total_mult']))
 
+# ---------- 4.6 v1.2.0：T3 拦截 / 装备名兜底 / 部位校验 / 品质 / 属性系数 ----------
+r_t3 = grading.grade_item({'item_type': 'necklace', 'tier': 3, 'grade': 'relic',
+                           'main_stat': {'name': '力量', 'value': 17348},
+                           'options': [{'raw': '额外伤害 +1.60%'}]})
+check('T3 直接拒绝评分', 'T3' in (r_t3.get('error') or ''), str(r_t3))
+txt_t3 = grading.format_result(r_t3)
+check('T3 输出带说明', '仅覆盖' in txt_t3 and 'T4' in txt_t3, txt_t3)
+
+r_name = grading.grade_item({'name': '相迎终结项链', 'item_type': None, 'tier': 4,
+                             'main_stat': {'name': '力量', 'value': 17348},
+                             'options': [{'raw': '额外伤害 +1.60%'}]})
+check('装备名兜底部位', r_name.get('slot') == 'necklace', str(r_name.get('slot')))
+check('装备名透传结果', r_name.get('name') == '相迎终结项链', str(r_name.get('name')))
+check('装备名显示在输出', '相迎终结项链' in grading.format_result(r_name),
+      grading.format_result(r_name)[:160])
+
+r_name_grade = grading.grade_item({'name': '古代相迎终结项链', 'item_type': None,
+                                   'tier': 4, 'main_stat': None, 'options': []})
+check('装备名兜底品级', r_name_grade.get('grade_type') == 'ancient',
+      str(r_name_grade.get('grade_type')))
+
+r_wrong = grading.grade_accessory({
+    'item_type': 'earring', 'grade': 'ancient', 'main_stat': None, 'stats': [],
+    'options': [{'raw': '额外伤害 +1.60%'}, {'raw': '最大生命值 +3250'}]})
+check('部位不符给出警告', len(r_wrong['warnings']) == 1
+      and '只出现在项链' in r_wrong['warnings'][0], str(r_wrong['warnings']))
+check('部位不符显示在输出', '词条与部位不符' in grading.format_result(r_wrong),
+      grading.format_result(r_wrong)[-260:])
+r_right = grading.grade_accessory({
+    'item_type': 'necklace', 'grade': 'ancient', 'main_stat': None, 'stats': [],
+    'options': [{'raw': '额外伤害 +1.60%'}, {'raw': '最大生命值 +3250'}]})
+check('正确部位无警告', not r_right['warnings'], str(r_right['warnings']))
+
+r_quality = grading.grade_accessory({'item_type': 'ring', 'grade': 'ancient',
+                                     'quality': 94, 'main_stat': None, 'options': []})
+txt_quality = grading.format_result(r_quality)
+check('无主属性也显示品质', '游戏内品质：94' in txt_quality, txt_quality[:220])
+
+r_stat = grading.grade_bracelet({
+    'item_type': 'bracelet', 'grade': 'ancient',
+    'main_stat': {'name': '敏捷', 'value': 14016},
+    'stats': [{'name': '会心', 'value': 84}, {'name': '专长', 'value': 91}],
+    'options': [{'raw': '暴击率增加4.2%。'},
+                {'raw': '攻击触发暴击时，对敌人造成的伤害增加1.5%。'}]})
+check('手镯属性战力提示 +5.25%', '+5.25%' in r_stat['stat_power_note'],
+      r_stat['stat_power_note'])
+check('手镯属性提示显示', '属性战力' in grading.format_result(r_stat),
+      grading.format_result(r_stat)[:260])
+check('手镯属性不计入特殊词条合计', abs(r_stat['total_mult'] - 1.04) < 1e-9,
+      str(r_stat['total_mult']))
+
+r_many = grading.grade_accessory({
+    'item_type': 'ring', 'grade': 'ancient', 'main_stat': None,
+    'options': [{'raw': f'未知词条{i}'} for i in range(8)]})
+txt_many = grading.format_result(r_many)
+check('残留超过 6 条给出省略提示', '另有 2 条未列出' in txt_many, txt_many[-320:])
+
 # ---------- 5. 部位/品级兜底与错误路径 ----------
 err_res = grading.grade_item({'item_type': None})
 check('未知部位返回错误', 'error' in err_res, str(err_res))
@@ -342,8 +417,14 @@ for py in ['main.py', 'core/cnparse.py', 'core/grading.py', 'core/imageio.py',
 # metadata/_conf_schema JSON/YAML 粗校验
 conf = json.loads((ROOT / '_conf_schema.json').read_text(encoding='utf-8'))
 check('配置模式含 vision_enabled', 'vision_enabled' in conf)
+check('配置含识别提供商选择器', conf.get('vision_provider_id', {}).get('_special')
+      == 'select_provider', str(conf.get('vision_provider_id')))
+check('配置含识别超时', conf.get('vision_timeout', {}).get('default') == 120
+      and conf['vision_timeout'].get('type') == 'int', str(conf.get('vision_timeout')))
 meta = (ROOT / 'metadata.yaml').read_text(encoding='utf-8')
 check('metadata 含插件名', 'astrbot_plugin_loa_score' in meta)
+meta_ver = re.search(r'^version:\s*(\S+)\s*$', meta, re.M)
+check('metadata 含版本号', meta_ver is not None, meta)
 
 # ---------- 6.5 真实导入验证（astrbot 打桩，拦截加载期错误） ----------
 # 背景：vision.py 曾用 % 格式化拼接含全角'。'的提示词，import 时抛
@@ -380,12 +461,16 @@ def _install_astrbot_stubs():
                 return fn
             return deco
 
+    class _Star:
+        def __init__(self, context=None, *a, **k):
+            self.context = context
+
     api.logger = _Logger()
     api.AstrBotConfig = dict
     ev.filter = _Filter()
     ev.AstrMessageEvent = object
     star.Context = object
-    star.Star = object
+    star.Star = _Star
     star.register = lambda *a, **k: (lambda cls: cls)
     comp.Image = object
     path_mod.get_astrbot_plugin_data_path = lambda: str(ROOT / '.test_plugin_data')
@@ -409,15 +494,66 @@ try:
           and 'not_equipment' in vision.VISION_PROMPT,
           vision.VISION_PROMPT[:120])
     check('vision 提示词无残留占位符', '__CLAUSE_LIST__' not in vision.VISION_PROMPT)
+    check('vision 提示词要求转写装备名',
+          '"name"' in vision.VISION_PROMPT and '装备名称' in vision.VISION_PROMPT,
+          vision.VISION_PROMPT[:200])
+    check('vision 提示词要求识别 T3', '道具阶级 3' in vision.VISION_PROMPT)
 except Exception as e:
     check('core.vision 真实导入成功', False, repr(e))
 
+main_mod = None
 try:
     main_mod = _importlib.import_module('main')
     check('main.py 真实导入成功（@register 装饰可执行）',
           hasattr(main_mod, 'LoaScorePlugin'), repr(getattr(main_mod, 'LoaScorePlugin', None)))
 except Exception as e:
     check('main.py 真实导入成功', False, repr(e))
+
+if main_mod is not None:
+    check('metadata 与代码版本一致',
+          bool(meta_ver) and meta_ver.group(1) == getattr(main_mod, 'PLUGIN_VERSION', None),
+          f'{meta_ver.group(1) if meta_ver else "?"} vs '
+          f'{getattr(main_mod, "PLUGIN_VERSION", None)}')
+
+    # ---------- 6.5.1 v1.2.0：超时配置夹紧 / 临时文件唯一命名 / 过期清理 ----------
+    import asyncio as _asyncio_init
+    import os as _os
+    import tempfile
+    import time as _time
+
+    plugin = main_mod.LoaScorePlugin(None, {'vision_timeout': 5})
+    check('超时下限夹紧到 10s', plugin.vision_timeout == 10.0, str(plugin.vision_timeout))
+    check('超时上限夹紧到 600s',
+          main_mod.LoaScorePlugin(None, {'vision_timeout': 9999}).vision_timeout == 600.0)
+    check('默认超时 120s',
+          main_mod.LoaScorePlugin(None, {}).vision_timeout == 120.0)
+    p1 = _asyncio_init.run(plugin._save_temp_image(b'\x89PNG\r\n\x1a\n', 'png'))
+    p2 = _asyncio_init.run(plugin._save_temp_image(b'\x89PNG\r\n\x1a\n', 'png'))
+    check('临时文件唯一命名', p1 != p2, f'{p1} / {p2}')
+    check('临时文件写入成功', p1.exists() and p2.exists())
+    p1.unlink(missing_ok=True)
+    p2.unlink(missing_ok=True)
+
+    async def _many_temp():
+        return await _asyncio_init.gather(
+            *[plugin._save_temp_image(b'x', 'png') for _ in range(20)])
+
+    many = _asyncio_init.run(_many_temp())
+    check('并发临时文件不冲突', len(set(many)) == 20 and all(p.exists() for p in many),
+          f'{len(set(many))} unique')
+    for p in many:
+        p.unlink(missing_ok=True)
+
+    with tempfile.TemporaryDirectory() as td:
+        old = Path(td) / 'old.png'
+        new = Path(td) / 'new.png'
+        old.write_bytes(b'x')
+        new.write_bytes(b'y')
+        packed = _time.time() - 100000
+        _os.utime(old, (packed, packed))
+        removed = imageio.cleanup_stale_files(td, 3600)
+        check('过期临时文件被清理', removed == 1 and not old.exists(), f'{removed}')
+        check('新临时文件保留', new.exists())
 
 # ---------- 6.6 vision.extract_item 全路径（假 Provider，覆盖 2026-10-27 真机事故） ----------
 import asyncio as _asyncio
@@ -483,7 +619,7 @@ check('image_urls 传本地路径', p.calls and p.calls[0]['image_urls'] == ['/t
 
 item, err = _run_extract(_FakeProvider('{"error": "no_image_visible"}'))
 check('no_image_visible → 日志排查指引', item is None and '图片可能没有到达模型' in err
-      and '当前会话模型：test_prov / test-vl-1' in err
+      and '当前识别模型：test_prov / test-vl-1' in err
       and '适配器:_FakeProvider' in err
       and '检测到图片请求失败' in err, err)
 
@@ -492,7 +628,7 @@ check('not_equipment → 多模态指引', item is None and '多模态' in err, 
 
 item, err = _run_extract(_FakeProvider('这张图片我看不清楚哦，请重新发送~'))
 check('闲聊回复 → 无法解析指引', item is None and '无法解析' in err
-      and '当前会话模型' in err, err)
+      and '当前识别模型' in err, err)
 
 item, err = _run_extract(_FakeProvider(''))
 check('空回复 → 指引', item is None and '不支持图片' in err, err)
@@ -518,6 +654,100 @@ item, err = _asyncio.run(vision.extract_item(
 check('指定提供商不存在 → 明确指引', item is None and 'no_such' in err
       and 'vision_provider_id' in err, err)
 
+
+class _FakeCtxByName:
+    def get_provider_by_id(self, pid):
+        return None
+
+    def get_all_providers(self):
+        return [_FakeProvider(GOOD_JSON)]
+
+
+item, err = _asyncio.run(vision.extract_item(
+    _FakeCtxByName(), _FakeEvent(), '/tmp/fake.png', provider_id='test-vl-1'))
+check('提供商按模型名兜底解析', item is not None and err == '', f'{item} {err}')
+item, err = _asyncio.run(vision.extract_item(
+    _FakeCtxByName(), _FakeEvent(), '/tmp/fake.png', provider_id='不存在'))
+check('提供商兜底仍未找到 → 指引', item is None and '未找到' in err, err)
+
+# ---------- 6.6.0 端到端：指令 → 取图 → 识别 → 评分 → 清理临时文件 ----------
+if main_mod is not None:
+    class _FakeImage:
+        def __init__(self, path):
+            self._path = path
+            self.url = ''
+            self.file = ''
+
+        async def convert_to_file_path(self):
+            return str(self._path)
+
+    class _FakeScoreEvent:
+        unified_msg_origin = 'qq:group:test'
+
+        def __init__(self, comps):
+            self._comps = comps
+
+        def get_messages(self):
+            return self._comps
+
+        def plain_result(self, text):
+            return text
+
+    async def _collect(agen):
+        return [item async for item in agen]
+
+    with tempfile.TemporaryDirectory() as td:
+        img_path = Path(td) / 'equip.png'
+        img_path.write_bytes(b'\x89PNG\r\n\x1a\n' + b'0' * 64)
+        plugin.context = _FakeCtx(_FakeProvider(GOOD_JSON))
+        event = _FakeScoreEvent([_FakeImage(img_path)])
+        replies = _asyncio_init.run(_collect(plugin.score_item(event)))
+        check('端到端评分成功',
+              any('装备' in r and '评分' in r for r in replies), str(replies)[:300])
+        check('评分后临时截图已清理', not list(plugin.tmp_dir.iterdir()),
+              str(list(plugin.tmp_dir.iterdir())))
+
+        # 识别过程抛异常时，finally 也必须删掉临时截图（旧实现只在成功后 unlink）
+        async def _boom(*a, **k):
+            raise RuntimeError('boom')
+
+        orig_extract = main_mod.extract_item
+        main_mod.extract_item = _boom
+        try:
+            replies = _asyncio_init.run(_collect(plugin.score_item(event)))
+        finally:
+            main_mod.extract_item = orig_extract
+        check('识别异常时给出通用错误', any('评分过程出错' in r for r in replies),
+              str(replies)[:300])
+        check('识别异常时临时截图也清理', not list(plugin.tmp_dir.iterdir()),
+              str(list(plugin.tmp_dir.iterdir())))
+
+# ---------- 6.6.1 v1.2.0：识别结果清洗与错误码 ----------
+n = vision.normalize_item({'name': '  相迎   终结项链 ', 'tier': 'T4',
+                           'item_type': 'other',
+                           'options': [{'text': None}, {'text': ' 额外伤害 +1.60% '}]})
+check('normalize: 名称压缩空格', n['name'] == '相迎 终结项链', str(n['name']))
+check('normalize: T4 字符串转 int', n['tier'] == 4, str(n['tier']))
+check('normalize: other 部位置空', n['item_type'] is None, str(n['item_type']))
+check('normalize: 空选项丢弃', n['options'] == [{'raw': '额外伤害 +1.60%', 'tag': None}],
+      str(n['options']))
+check('normalize: tier=4.0 转 int', vision.normalize_item({'tier': 4.0})['tier'] == 4)
+check('normalize: null-like 名称置空', vision.normalize_item({'name': '无'})['name'] is None)
+n2 = vision.normalize_item({'stats': {'name': '体力', 'value': '4,062'},
+                            'options': {'text': ' 额外伤害 +1.60% '}})
+check('normalize: 单对象 stats/options 兼容',
+      n2['stats'] == [{'name': '体力', 'value': 4062.0}]
+      and n2['options'] == [{'raw': '额外伤害 +1.60%', 'tag': None}], str(n2))
+
+item, err = _run_extract(_FakeProvider('{"error":"image_too_small"}'))
+check('未知错误码 → 原样提示', item is None and 'image_too_small' in err, err)
+item, err = _run_extract(_FakeProvider('{}'))
+check('空结果 → 明确提示', item is None and '空结果' in err, err)
+
+check('JSON 大写代码块',
+      vision._extract_json('```JSON\n{"item_type":"ring"}\n```\n说明：{备注}')
+      == {'item_type': 'ring'})
+
 # ---------- 6.7 _extract_json 修复管线（glm-4.5v 真机"无法解析"事故回归） ----------
 XJ = vision._extract_json
 robust_cases = {
@@ -541,6 +771,9 @@ for name, text in robust_cases.items():
     check(f'提取 {name}', ok, repr(got))
 check('无 JSON 的闲聊返回 None', XJ('这张图片我看不清楚哦~') is None)
 check('数组顶层不算对象', XJ('[1,2,3]') is None)
+
+import shutil as _shutil
+_shutil.rmtree(ROOT / '.test_plugin_data', ignore_errors=True)
 
 print()
 print(f'通过 {PASS} 项，失败 {len(FAIL)} 项')

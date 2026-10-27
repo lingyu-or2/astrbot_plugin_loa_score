@@ -6,11 +6,11 @@
 - 手镯：特殊词条 下/中/上评级 + 战力倍率合计（属性行不参与评级）。
 
 评分规则表 data/tables.json 由 lopec 前端逆向数据离线构建；
-词条识别由当前会话的多模态模型完成，评分全部离线计算。
+词条识别由多模态模型（会话模型或识别专用提供商）完成，评分全部离线计算。
 """
 
 import asyncio
-import time
+import uuid
 from pathlib import Path
 
 from astrbot.api.event import filter, AstrMessageEvent
@@ -21,47 +21,51 @@ from astrbot.core.utils.astrbot_path import get_astrbot_plugin_data_path
 
 try:  # AstrBot 以包形式加载插件
     from .core import grading
-    from .core.imageio import acquire_image_bytes, validate_image
-    from .core.vision import extract_item
+    from .core.imageio import acquire_image_bytes, cleanup_stale_files, validate_image
+    from .core.vision import VISION_TIMEOUT, extract_item
 except ImportError:  # 兼容以目录为根的直接加载
     from core import grading
-    from core.imageio import acquire_image_bytes, validate_image
-    from core.vision import extract_item
+    from core.imageio import acquire_image_bytes, cleanup_stale_files, validate_image
+    from core.vision import VISION_TIMEOUT, extract_item
 
 PLUGIN_NAME = 'astrbot_plugin_loa_score'
+PLUGIN_VERSION = '1.2.0'
 
 SLOT_ARG = {'手镯': 'bracelet', '팔찌': 'bracelet', 'bracelet': 'bracelet',
             '项链': 'necklace', '목걸이': 'necklace', 'necklace': 'necklace',
             '耳环': 'earring', '귀걸이': 'earring', 'earing': 'earring',
             '戒指': 'ring', '반지': 'ring', 'ring': 'ring'}
 GRADE_ARG = {'遗物': 'relic', '유물': 'relic', 'relic': 'relic',
-             '古代': 'ancient', '고대': 'ancient', 'ancient': 'ancient'}
+             '古代': 'ancient', '远古': 'ancient', '고대': 'ancient', 'ancient': 'ancient'}
 
-HELP_TEXT = """📿 命运方舟首饰评分（lopec 口径）
+HELP_TEXT = """📿 命运方舟首饰评分（lopec 口径 · 仅 T4）
 
 用法：/首饰评分 + 装备截图（图片和指令同一条消息）
-可选参数：/首饰评分 [部位] [品级]
+可选参数：/首饰评分 [部位] [品级]（顺序不限）
   部位：手镯 / 项链 / 耳环 / 戒指（截图看不出来时手动指定）
-  品级：遗物 / 古代（不填则同时给出两套评级）
+  品级：遗物 / 古代（不填则按截图/共用规则展示）
 
 示例：
   /首饰评分（附手镯截图）
   /首饰评分 项链 古代（附截图）
 
 评分内容：
-  · 项链/耳环/戒指：主属性百分比（T4 区间）+ 词条 下/中/上 评级 + 战力倍率
-  · 手镯：特殊词条 下/中/上 评级 + 特殊词条战力倍率合计（属性行不评级）
+  · 项链/耳环/戒指：主属性百分比 + 词条 下/中/上 评级 + 战力倍率
+  · 手镯：特殊词条 下/中/上 评级 + 特殊词条战力倍率（属性行另有 lopec 属性系数）
 
-说明：识别由当前会话的多模态模型完成，请给支持图片的模型；
-评分规则表仅覆盖 T4（遗物/古代）。"""
+说明：
+  · 识别需要支持图片输入的模型；可在插件配置指定「识别专用提供商」
+  · 仅支持 T4（道具阶级 4）；T3 装备会直接提示不支持
+  · 一次只评分第一张图，多件请分条发送
+  · 词条与部位不符时会给出核对提醒，不改变评分"""
 
 
 @register(
     PLUGIN_NAME,
     'moLing',
     '命运方舟首饰/手镯截图评分插件（lopec 口径）',
-    '1.0.0',
-    'https://github.com/yourname/astrbot_plugin_loa_score',
+    PLUGIN_VERSION,
+    'https://github.com/lingyu-or2/astrbot_plugin_loa_score',
 )
 class LoaScorePlugin(Star):
 
@@ -72,18 +76,31 @@ class LoaScorePlugin(Star):
         self.data_dir = Path(get_astrbot_plugin_data_path()) / PLUGIN_NAME
         self.tmp_dir = self.data_dir / 'tmp'
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
+        removed = cleanup_stale_files(self.tmp_dir)
+        if removed:
+            logger.info(f'[loa_score] 已清理过期临时截图 {removed} 张')
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
         self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
+        self.vision_timeout = self._read_timeout()
 
     async def terminate(self):
         logger.info('[loa_score] 插件已卸载')
 
+    def _read_timeout(self) -> float:
+        try:
+            value = float(self.config.get('vision_timeout', VISION_TIMEOUT))
+        except (TypeError, ValueError):
+            value = VISION_TIMEOUT
+        return max(10.0, min(600.0, value))
+
     def _reload_config(self):
         self.vision_enabled = bool(self.config.get('vision_enabled', True))
         self.vision_provider_id = str(self.config.get('vision_provider_id', '') or '').strip()
+        self.vision_timeout = self._read_timeout()
 
     async def _save_temp_image(self, image_data: bytes, ext: str) -> Path:
-        path = self.tmp_dir / f'score_{int(time.time() * 1000)}.{ext}'
+        # uuid 避免同一毫秒并发时互相覆盖
+        path = self.tmp_dir / f'score_{uuid.uuid4().hex[:12]}.{ext}'
 
         def _write():
             path.write_bytes(image_data)
@@ -105,14 +122,11 @@ class LoaScorePlugin(Star):
                 yield event.plain_result('⚠️ 截图评分功能已在插件配置中关闭（vision_enabled=false）。')
                 return
 
-            image_comp = None
-            for comp in event.get_messages():
-                if isinstance(comp, Image):
-                    image_comp = comp
-                    break
-            if image_comp is None:
+            images = [comp for comp in event.get_messages() if isinstance(comp, Image)]
+            if not images:
                 yield event.plain_result(HELP_TEXT)
                 return
+            image_comp = images[0]
 
             # 指令参数可覆盖部位/品级（截图信息不全时手动指定）
             force_grade = None
@@ -124,7 +138,9 @@ class LoaScorePlugin(Star):
                 elif key in GRADE_ARG:
                     force_grade = GRADE_ARG[key]
 
-            yield event.plain_result('🔍 正在识别截图，请稍候…')
+            notice = (f'（检测到 {len(images)} 张图片，本次仅评分第一张）'
+                      if len(images) > 1 else '')
+            yield event.plain_result('🔍 正在识别截图，请稍候…' + notice)
 
             image_data, err = await acquire_image_bytes(image_comp)
             if not image_data:
@@ -136,13 +152,16 @@ class LoaScorePlugin(Star):
                 return
             image_path = await self._save_temp_image(image_data, ext)
 
-            item, err = await extract_item(
-                self.context, event, str(image_path),
-                provider_id=self.vision_provider_id)
             try:
-                image_path.unlink(missing_ok=True)
-            except Exception:
-                pass
+                item, err = await extract_item(
+                    self.context, event, str(image_path),
+                    provider_id=self.vision_provider_id,
+                    timeout=self.vision_timeout)
+            finally:
+                try:
+                    image_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
             if item is None:
                 yield event.plain_result(f'❌ {err}')
                 return
@@ -150,11 +169,6 @@ class LoaScorePlugin(Star):
                 item['item_type'] = force_slot
             if force_grade:
                 item['grade'] = force_grade
-            if not item.get('item_type'):
-                yield event.plain_result(
-                    '❌ 未能确定装备部位（项链/耳环/戒指/手镯）。\n'
-                    '请截图包含装备名称的界面，或用指令参数指定：/首饰评分 手镯 古代')
-                return
 
             result = grading.grade_item(item)
             yield event.plain_result(grading.format_result(result))

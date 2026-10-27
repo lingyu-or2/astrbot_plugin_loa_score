@@ -5,6 +5,7 @@ aiohttp 缺失时仅联网下载不可用；validate_image 等纯函数不受影
 
 import asyncio
 import base64
+import time
 from pathlib import Path
 
 try:
@@ -14,6 +15,24 @@ except ImportError:  # 本地离线自测环境可能没有 aiohttp
 
 # 视觉模型侧限制宽松，但群图链本身有限制，取 10MB
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
+
+def cleanup_stale_files(directory, max_age_seconds: float = 24 * 3600) -> int:
+    """删除目录下超过 max_age_seconds 的临时文件，返回删除数量。"""
+    removed = 0
+    now = time.time()
+    try:
+        entries = list(Path(directory).iterdir())
+    except OSError:
+        return 0
+    for path in entries:
+        try:
+            if path.is_file() and now - path.stat().st_mtime > max_age_seconds:
+                path.unlink()
+                removed += 1
+        except OSError:
+            continue
+    return removed
 
 
 def validate_image(image_data: bytes):

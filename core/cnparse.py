@@ -122,6 +122,11 @@ STAT_LINE_PATTERNS = [
 ]
 
 _CLEAN_RE = re.compile(r'[\s\u3000]+')
+# 千分位逗号（3,250 → 3250）；只删夹在数字中间的，不碰文本里的中文逗号
+_THOUSANDS_RE = re.compile(r'(?<=\d),(?=\d{3}(?!\d))')
+_BULLET_RE = re.compile(r'^[•·●◆▪►#]+')
+# 全角符号只归一这些（全角逗号保留，交给结构位处理）
+_FULLWIDTH = str.maketrans({'％': '%', '＋': '+', '－': '-', '．': '.'})
 
 
 def normalize_value(x) -> float:
@@ -129,7 +134,11 @@ def normalize_value(x) -> float:
 
 
 def clean_line(line: str) -> str:
-    return _CLEAN_RE.sub('', line or '').strip('。.,，；;：:')
+    text = (line or '').translate(_FULLWIDTH)
+    text = _CLEAN_RE.sub('', text)
+    text = _THOUSANDS_RE.sub('', text)
+    text = _BULLET_RE.sub('', text)
+    return text.strip('。.,，；;：:')
 
 
 def is_stat_line(line: str):
@@ -225,9 +234,14 @@ def parse_accessory_option(line: str, kinds: dict):
     """解析饰品选项行 "额外伤害 +1.60%"（种类+数值型词条）。
 
     kinds 来自 tables['accessory_options']（含中文名别名；固定值变体的键带 @flat 后缀）。
-    返回 (kind_kr, value) 或 None。百分比行只匹配百分比阶梯，固定值行只匹配固定值阶梯。
+    返回 (kind_kr, value) 或 None。
+
+    百分号缺失/多写时，只有数值确实落在该类的 下/中/上 阶梯内才接受（防误配），
+    因此 "额外伤害 +1.60" 与 "最大生命值 +3250%" 这类转写误差也能正确归类。
     """
     text = clean_line(line)
+    # 去掉行尾括号说明（如「（不可叠加）」），不影响主体词条
+    text = re.sub(r'[（(][^（）()]*[）)]$', '', text)
     m = re.match(r'^(.*?)[+\-]?\s*' + _NUM + r'\s*(%?)$', text)
     if not m:
         return None
@@ -237,35 +251,45 @@ def parse_accessory_option(line: str, kinds: dict):
     if not name:
         return None
 
-    def matches(kind_kr: str, info: dict):
-        want_pct = info.get('percent', True)
-        if want_pct != is_pct:
-            return None
-        best = None
+    def alias_strength(kind_kr: str, info: dict):
+        best = (0, 0)
         for alias in list(info.get('cn', [])) + [kind_kr.replace('@flat', '')]:
             alias = alias.replace(' ', '')
             if not alias:
                 continue
             if alias in name:
-                # 正向包含：词条名里包含别名（额外伤害 ⊂ 额外伤害增加）
-                cand = (2, len(alias), kind_kr)
+                cand = (2, len(alias))  # 正向包含优先
             elif name in alias:
-                # 反向包含（攻击力 ⊂ 我方攻击力强化效果）：降权，仅在无正向时兜底
-                cand = (1, len(alias), kind_kr)
+                cand = (1, len(alias))  # 反向包含兜底
             else:
                 continue
-            if best is None or cand[:2] > best[:2]:
+            if cand > best:
                 best = cand
-        return best
+        return best if best != (0, 0) else None
 
-    best = None
+    def in_ladder(info: dict) -> bool:
+        for key in ('relic', 'ancient'):
+            vals = [round(float(v), 2) for v in (info.get(key) or [])]
+            if value in vals:
+                return True
+        return False
+
+    exact = None
+    loose = None
     for kind_kr, info in kinds.items():
-        cand = matches(kind_kr, info)
-        if cand and (best is None or cand[:2] > best[:2]):
-            best = cand
+        strength = alias_strength(kind_kr, info)
+        if not strength:
+            continue
+        if info.get('percent', True) == is_pct:
+            if exact is None or strength > exact[0]:
+                exact = (strength, kind_kr)
+        elif in_ladder(info):
+            if loose is None or strength > loose[0]:
+                loose = (strength, kind_kr)
+    best = exact or loose
     if best is None:
         return None
-    return best[2], value
+    return best[1], value
 
 
 def guess_item_type(text: str):
